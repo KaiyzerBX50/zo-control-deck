@@ -493,271 +493,219 @@ function CreditsTab({ credits, creditOverride, updateCreditOverride }: { credits
 }
 
 function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: boolean }) {
+  // NOSTROMO AUTOMATION TERMINAL THEME
+  // Industrial, dim, utilitarian, procedural - shipboard task control
+  
+  const totalCount = agents?.length ?? 0;
+  const activeCount = agents?.filter(a => a.active).length ?? 0;
+  const pausedCount = totalCount - activeCount;
+  const coverage = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
+  
+  // Generate segmented bar segments
+  const generateSegments = (percent, total = 10) => {
+    const filled = Math.round((percent / 100) * total);
+    const segments = [];
+    for (let i = 0; i < total; i++) {
+      segments.push(i < filled);
+    }
+    return segments;
+  };
+  
+  // State mapping
+  const getStateDisplay = (active) => active ? "LIVE" : "PAUSED";
+  const getStateColor = (active) => active ? "text-green-400" : "text-zinc-500";
+  const getLampColor = (active) => active ? "bg-green-400 shadow-green-400/50" : "bg-zinc-600";
+  
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 bg-zinc-950">
-        <div className="text-center">
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mx-auto mb-3 shadow-green-500/50 shadow-lg"></div>
-          <span className="text-lg text-green-400/70 lcars-font tracking-widest">SCANNING ROUTINES...</span>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="w-8 h-8 text-green-400 animate-spin" />
+        <span className="ml-3 text-lg text-green-400 lcars-font">Scanning routines...</span>
       </div>
     );
   }
   
-  const totalCount = agents?.length ?? 0;
-  const activeCount = agents?.filter(a => a.active).length ?? 0;
-  const pausedCount = agents?.filter(a => !a.active).length ?? 0;
-  const coverage = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
-  
-  // Get current time for "Updated" display
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
-  
   return (
-    <div className="space-y-4" style={{ background: 'linear-gradient(180deg, #0a0f0a 0%, #0d0d0d 100%)' }}>
-      {/* NOSTROMO TERMINAL STYLES */}
-      <style>{`
-        .nostromo-label { 
-          font-family: 'Orbitron', monospace; 
-          font-size: 10px; 
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          color: #8b9a8b;
-        }
-        .nostromo-value {
-          font-family: 'Orbitron', monospace;
-          color: #e8e8e0;
-        }
-        .terminal-glow {
-          text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
-        }
-        .segmented-bar {
-          display: flex;
-          gap: 3px;
-        }
-        .segment {
-          width: 8px;
-          height: 24px;
-          border-radius: 2px;
-          transition: all 0.3s ease;
-        }
-        .segment.active {
-          background: #4ade80;
-          box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
-        }
-        .segment.inactive {
-          background: #2a2f2a;
-        }
-        .status-lamp {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-        }
-        .lamp-live {
-          background: #4ade80;
-          box-shadow: 0 0 8px rgba(74, 222, 128, 0.7);
-          animation: pulse 2s infinite;
-        }
-        .lamp-paused {
-          background: #52525b;
-        }
-        .lamp-queued {
-          background: #f59e0b;
-          box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-      `}</style>
-      
-      {/* HEADER ROW - Automation Bay + Ship Link */}
+    <div className="space-y-4">
+      {/* NOSTROMO TERMINAL HEADER */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Automation Bay */}
-        <div className="bg-zinc-900/90 rounded-lg border border-green-900/40 p-4" style={{ background: 'linear-gradient(135deg, #0f1410 0%, #0a0d0a 100%)' }}>
-          <div className="nostromo-label mb-2">AUTOMATION BAY</div>
-          <div className="text-sm text-zinc-400 leading-relaxed">
-            Scheduled routines, next execution windows, and model assignments.
+        {/* Left: Automation Bay */}
+        <div className="bg-zinc-900/90 rounded-lg border border-green-500/30 overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-green-500/30 via-green-500/10 to-green-500/30"></div>
+          <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/30">
+            <div className="text-xs text-green-400/70 lcars-label-strip mb-1">AUTOMATION BAY</div>
+            <h3 className="text-2xl font-bold text-zinc-200 lcars-font tracking-wider">Automation Bay</h3>
+          </div>
+          <div className="p-4 bg-zinc-900/50">
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Scheduled routines, next execution windows, and model assignments.
+            </p>
           </div>
         </div>
         
-        {/* Ship Link */}
-        <div className="bg-zinc-900/90 rounded-lg border border-cyan-900/30 p-4" style={{ background: 'linear-gradient(135deg, #0a0f12 0%, #0a0d0d 100%)' }}>
-          <div className="nostromo-label mb-2">SHIP LINK</div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full shadow-green-500/50 shadow-lg"></div>
-              <span className="text-green-400 font-bold nostromo-value">CONNECTED</span>
+        {/* Right: Ship Link */}
+        <div className="bg-zinc-900/90 rounded-lg border border-cyan-500/30 overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-cyan-500/30 via-cyan-500/10 to-cyan-500/30"></div>
+          <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/30">
+            <div className="text-xs text-cyan-400/70 lcars-label-strip mb-1">SHIP LINK</div>
+            <h3 className="text-2xl font-bold text-zinc-200 lcars-font tracking-wider">Ship Link</h3>
+          </div>
+          <div className="p-4 bg-zinc-900/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-green-400 shadow-green-400/50 shadow-lg animate-pulse"></div>
+              <span className="text-lg font-bold text-green-400 lcars-font">CONNECTED</span>
             </div>
-            <span className="text-xs text-zinc-500 nostromo-label">Updated {timeStr}</span>
+            <div className="text-xs text-zinc-500 lcars-label-strip">
+              Updated {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
           </div>
         </div>
       </div>
       
-      {/* METRIC ROW - Total Routines / Live Routines / Queue Coverage */}
-      <div className="grid grid-cols-3 gap-3">
-        {/* Total Routines */}
-        <div className="bg-zinc-900/80 rounded border border-zinc-800 p-3" style={{ background: '#0a0a0a' }}>
-          <div className="nostromo-label mb-1">Total Routines</div>
-          <div className="text-3xl font-bold text-zinc-200 nostromo-value terminal-glow">{totalCount}</div>
-          <div className="text-xs text-zinc-600 mt-1">registered ship routines</div>
+      {/* QUEUE METRICS - Segmented Industrial Style */}
+      <div className="bg-zinc-900/90 rounded-lg border border-zinc-600/30 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-zinc-600/50 via-green-500/30 to-zinc-600/50"></div>
+        <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/20">
+          <div className="text-xs text-zinc-500 lcars-label-strip mb-1">ROUTINE DISPATCH BOARD</div>
+          <h3 className="text-2xl font-bold text-zinc-300 lcars-font tracking-wider">Routine Dispatch Board</h3>
         </div>
-        
-        {/* Live Routines */}
-        <div className="bg-zinc-900/80 rounded border border-zinc-800 p-3" style={{ background: '#0a0a0a' }}>
-          <div className="nostromo-label mb-1">Live Routines</div>
-          <div className="text-3xl font-bold text-green-400 nostromo-value terminal-glow">{activeCount}</div>
-          <div className="text-xs text-zinc-600 mt-1">currently active</div>
-        </div>
-        
-        {/* Queue Coverage - Segmented Bar */}
-        <div className="bg-zinc-900/80 rounded border border-zinc-800 p-3" style={{ background: '#0a0a0a' }}>
-          <div className="nostromo-label mb-1">Queue Coverage</div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-zinc-200 nostromo-value">{coverage}%</span>
-          </div>
-          {/* Segmented meter */}
-          <div className="segmented-bar mt-2">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div 
-                key={i} 
-                className={`segment ${i < Math.round(coverage / 5) ? 'active' : 'inactive'}`}
-              ></div>
-            ))}
-          </div>
-          <div className="text-xs text-zinc-600 mt-1">active routine ratio</div>
-        </div>
-      </div>
-      
-      {/* ROUTINE DISPATCH BOARD */}
-      <div className="rounded-lg border border-green-900/30 overflow-hidden" style={{ background: 'linear-gradient(180deg, #0f1410 0%, #0a0d0a 100%)' }}>
-        {/* Header strip */}
-        <div className="px-4 py-2 bg-green-950/40 border-b border-green-900/30">
-          <div className="nostromo-label">ROUTINE DISPATCH BOARD</div>
-        </div>
-        
-        <div className="p-4">
-          <div className="text-sm text-zinc-400 mb-4">
+        <div className="p-4 bg-zinc-900/30">
+          <p className="text-sm text-zinc-500 mb-4">
             Monitor ship routines, check dispatch state, and review model assignments across the active queue.
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Total Routines */}
+            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
+              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Total Routines</div>
+              <div className="text-3xl font-bold text-zinc-200 lcars-font">{totalCount}</div>
+              <div className="text-xs text-zinc-600">registered ship routines</div>
+            </div>
+            
+            {/* Live Routines */}
+            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
+              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Live Routines</div>
+              <div className="text-3xl font-bold text-green-400 lcars-font">{activeCount}</div>
+              <div className="text-xs text-zinc-600">currently active</div>
+            </div>
+            
+            {/* Queue Coverage */}
+            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
+              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Queue Coverage</div>
+              <div className="text-3xl font-bold text-amber-400 lcars-font">{coverage.toFixed(1)}%</div>
+              <div className="text-xs text-zinc-600">active routine ratio</div>
+            </div>
+            
+            {/* Dispatch State */}
+            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
+              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Dispatch State</div>
+              <div className="text-3xl font-bold text-zinc-300 lcars-font">
+                {activeCount > 0 ? "ACTIVE" : "STANDBY"}
+              </div>
+              <div className="text-xs text-zinc-600">queue state</div>
+            </div>
           </div>
           
-          {/* Quick stats table */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-            <div className="flex flex-col">
-              <span className="nostromo-label">Total Routines</span>
-              <span className="text-zinc-200 nostromo-value">{totalCount}</span>
+          {/* Segmented Queue Bar */}
+          <div className="mt-4 bg-zinc-800/30 rounded p-3 border border-zinc-700/30">
+            <div className="text-xs text-zinc-500 lcars-label-strip mb-2">QUEUE METER</div>
+            <div className="flex gap-1">
+              {generateSegments(coverage, 20).map((filled, i) => (
+                <div 
+                  key={i} 
+                  className={"h-4 flex-1 rounded-sm " + (filled ? "bg-green-400/70 shadow-sm shadow-green-400/30" : "bg-zinc-700/30")}
+                ></div>
+              ))}
             </div>
-            <div className="flex flex-col">
-              <span className="nostromo-label">Live Routines</span>
-              <span className="text-green-400 nostromo-value">{activeCount}</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="nostromo-label">Paused Routines</span>
-              <span className="text-zinc-500 nostromo-value">{pausedCount}</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="nostromo-label">Dispatch State</span>
-              <span className="text-amber-500 nostromo-value">{activeCount > 0 ? 'ACTIVE' : 'STANDBY'}</span>
+            <div className="flex justify-between mt-1 text-xs text-zinc-600 lcars-label-strip">
+              <span>0%</span>
+              <span>{coverage.toFixed(1)}% COVERAGE</span>
+              <span>100%</span>
             </div>
           </div>
         </div>
       </div>
       
       {/* SHIP ROUTINES LIST */}
-      <div className="rounded-lg border border-zinc-800 overflow-hidden" style={{ background: '#0a0a0a' }}>
-        {/* Header */}
-        <div className="px-4 py-3 bg-zinc-900/50 border-b border-zinc-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="nostromo-label mb-1">SHIP ROUTINES</div>
-              <div className="text-sm text-zinc-500">Standing automations, dispatch windows, and assigned models.</div>
-            </div>
-            <span className="text-xs text-zinc-600 nostromo-label">Live queue data from ship routines</span>
-          </div>
+      <div className="bg-zinc-900/90 rounded-lg border border-zinc-600/30 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-zinc-600/50 via-green-500/30 to-zinc-600/50"></div>
+        <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/20">
+          <div className="text-xs text-zinc-500 lcars-label-strip mb-1">SHIP ROUTINES</div>
+          <h3 className="text-2xl font-bold text-zinc-300 lcars-font tracking-wider">Ship Routines</h3>
+          <p className="text-sm text-zinc-500 mt-1">Standing automations, dispatch windows, and assigned models.</p>
         </div>
-        
-        {/* Routine List */}
-        <div className="divide-y divide-zinc-900">
+        <div className="p-3 bg-zinc-900/30">
           {agents && agents.length > 0 ? (
-            agents.map((agent, index) => {
-              // Determine status
-              const isActive = agent.active;
-              const stateTag = isActive ? 'LIVE' : 'PAUSED';
-              const lampClass = isActive ? 'lamp-live' : 'lamp-paused';
-              
-              // Extract model from instruction or use default
-              const modelMatch = agent.instruction?.match(/model[:\s]+([^\s,]+)/i);
-              const model = modelMatch ? modelMatch[1] : 'glm-5';
-              
-              // Next run
-              const nextRun = agent.rrule || 'No schedule';
-              
-              return (
-                <div 
-                  key={agent.id}
-                  className="flex items-center gap-4 p-4 hover:bg-zinc-900/30 transition-colors"
-                  style={{ background: 'linear-gradient(90deg, #0a0d0a 0%, #080a08 100%)' }}
-                >
-                  {/* Status Lamp */}
-                  <div className={`status-lamp ${lampClass}`}></div>
-                  
-                  {/* Routine Number */}
-                  <div className="text-zinc-600 nostromo-value w-16 text-xs">
-                    RTN-{String(index + 1).padStart(2, '0')}
-                  </div>
-                  
-                  {/* Routine Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-zinc-200 truncate nostromo-value">
-                      {agent.instruction ? agent.instruction.slice(0, 60) : 'Unnamed Routine'}...
+            <div className="space-y-2">
+              {agents.map((agent, index) => {
+                const routineNum = "RTN-" + String(index + 1).padStart(2, '0');
+                const state = getStateDisplay(agent.active);
+                const stateColor = getStateColor(agent.active);
+                const lampColor = getLampColor(agent.active);
+                const model = agent.rrule ? "scheduled" : "manual";
+                const nextDispatch = agent.active ? "pending" : "no schedule";
+                
+                return (
+                  <div 
+                    key={agent.id}
+                    className="flex items-center gap-3 p-3 bg-zinc-800/40 rounded border border-zinc-700/30 hover:border-green-500/30 transition-all"
+                  >
+                    <div className={"w-2 h-2 rounded-full " + lampColor + (agent.active ? " animate-pulse" : "")}></div>
+                    <div className="text-xs text-zinc-500 lcars-font w-14 flex-shrink-0">{routineNum}</div>
+                    <div className="w-px h-8 bg-zinc-700/50"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-zinc-200 truncate font-medium">
+                        {(agent.instruction || "Unnamed Routine").slice(0, 50)}...
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
+                        <span className={stateColor}>{state}</span>
+                        <span className="text-zinc-600">|</span>
+                        <span className="text-cyan-400/70">Model: {model}</span>
+                        <span className="text-zinc-600">|</span>
+                        <span className="text-amber-400/70">Next: {nextDispatch}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 mt-1 text-xs">
-                      {/* State Tag */}
-                      <span className={`px-2 py-0.5 rounded text-xs ${
-                        isActive 
-                          ? 'bg-green-900/40 text-green-400' 
-                          : 'bg-zinc-800 text-zinc-500'
-                      } nostromo-label`}>
-                        {stateTag}
-                      </span>
-                      
-                      {/* Model */}
-                      <span className="text-cyan-600/70 nostromo-label">
-                        MODEL: {model}
-                      </span>
-                      
-                      {/* Next Dispatch */}
-                      <span className="text-amber-600/60 nostromo-label">
-                        NEXT: {nextRun}
-                      </span>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-600" />
                   </div>
-                  
-                  {/* Delivery Method */}
-                  <div className="text-xs text-zinc-600 nostromo-label uppercase">
-                    {agent.delivery_method || 'none'}
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           ) : (
-            <div className="p-8 text-center text-zinc-600">
-              <div className="nostromo-label">NO ROUTINES REGISTERED</div>
-              <div className="text-sm mt-2">Queue awaiting ship task assignments.</div>
+            <div className="text-center py-12 text-zinc-500">
+              <Bot className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
+              <div className="text-lg lcars-font">NO ROUTINES REGISTERED</div>
+              <div className="text-sm mt-1">Ship automation queue is empty</div>
             </div>
           )}
         </div>
-      </div>
-      
-      {/* FOOTER - Queue Summary */}
-      <div className="flex items-center justify-between px-4 py-2 bg-zinc-900/30 rounded border border-zinc-800">
-        <span className="nostromo-label text-zinc-600">QUEUE STATUS</span>
-        <span className="text-xs text-zinc-500 nostromo-value">
-          {activeCount} active · {pausedCount} paused · {totalCount} total routines
-        </span>
+        
+        {/* Footer Stats */}
+        <div className="px-4 py-3 border-t border-zinc-700/50 bg-zinc-800/20">
+          <div className="flex items-center justify-between text-xs text-zinc-500">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                Live: {activeCount}
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
+                Paused: {pausedCount}
+              </span>
+            </div>
+            <span className="lcars-label-strip">QUEUE AWAITING NEXT WINDOWS</span>
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+function SecurityTab() {
+  return <div className="space-y-6"><LCARSPanel title="Security Status" color="rose"><div className="flex items-center justify-center h-40"><div className="text-center"><Shield className="w-12 h-12 text-rose-400 mx-auto mb-3" /><div className="text-lg text-zinc-400">Security monitoring requires API configuration</div></div></div></LCARSPanel></div>;
+}
+
+function FailuresTab() {
+  return <div className="space-y-6"><LCARSPanel title="Failure Tracking" color="rose"><div className="flex items-center justify-center h-40"><div className="text-center"><AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-3" /><div className="text-lg text-zinc-400">Failure analysis requires API configuration</div></div></div></LCARSPanel></div>;
 }
 
 export default function ZoControlDeck() {
