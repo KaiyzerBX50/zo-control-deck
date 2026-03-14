@@ -430,272 +430,276 @@ function ServicesTab({ services, loading }: { services: ServiceData[] | null; lo
 }
 
 function CreditsTab({ credits, creditOverride, updateCreditOverride }: { credits: CreditsData | null; creditOverride: number | null; updateCreditOverride: (value: number) => void }) {
-  const balance = creditOverride ?? credits?.balance ?? 3852;
-  const dailyBurn = 40;
-  const runway = Math.round(balance / dailyBurn);
+  // API values
+  const apiBalance = credits?.balance ?? 3852;
+  const burn7d = 283;
+  
+  // Use override if set, otherwise use API
+  const balance = creditOverride ?? apiBalance;
+  const balanceUsd = balance / 100;
+  
+  // Calculate derived values
+  const dailyBurn = Math.round(burn7d / 7);
+  const runway = dailyBurn > 0 ? Math.round(balance / dailyBurn) : 95;
+  const burnPercent = Math.min(100, Math.max(0, (burn7d / balance) * 100));
+  
+  // Threshold state
+  const getThresholdState = () => {
+    if (runway > 90) return { state: "Stable", color: "text-teal-400", bg: "bg-teal-500/20" };
+    if (runway > 60) return { state: "Moderate", color: "text-cyan-400", bg: "bg-cyan-500/20" };
+    if (runway > 30) return { state: "Tight", color: "text-amber-400", bg: "bg-amber-500/20" };
+    if (runway > 7) return { state: "Low", color: "text-orange-400", bg: "bg-orange-500/20" };
+    return { state: "Critical", color: "text-rose-400", bg: "bg-rose-500/20" };
+  };
+  const threshold = getThresholdState();
+  
+  // Manual balance input
   const [manualBalance, setManualBalance] = useState("");
   const [overrideActive, setOverrideActive] = useState(creditOverride !== null);
   
   const handleCommit = () => {
     const value = parseFloat(manualBalance);
     if (!isNaN(value) && value > 0) {
-      updateCreditOverride(Math.round(value * 100));
+      const creditValue = Math.round(value * 100);
+      updateCreditOverride(creditValue);
       setOverrideActive(true);
       setManualBalance("");
     }
   };
   
+  // Mock model drain data
+  const modelDrain = [
+    { model: "openai:gpt-5.4", credits: 120, percent: 48 },
+    { model: "openrouter:minimax", credits: 48, percent: 19 },
+    { model: "vercel:z-ai/glm-5", credits: 30, percent: 12 },
+    { model: "vercel:minimax", credits: 12, percent: 5 },
+    { model: "zo:smart", credits: 9, percent: 4 }
+  ];
+  
+  // Mock burn ledger data
+  const burnLedger = [
+    { date: "03-08", burn: 42 },
+    { date: "03-09", burn: 37 },
+    { date: "03-10", burn: 21 },
+    { date: "03-11", burn: 35 },
+    { date: "03-12", burn: 32 },
+    { date: "03-13", burn: 58 },
+    { date: "03-14", burn: 58 }
+  ];
+  
   return (
     <div className="space-y-6">
+      {/* NEON HEADER */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-violet-500/20 blur-xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-900/30 via-transparent to-cyan-900/20 pointer-events-none"></div>
         <LCARSPanel title="Credit Reserve" color="amber">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/40">
-              <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Ledger Balance</div>
-              <div className="text-2xl font-bold text-amber-400" style={{ fontFamily: "'Orbitron', monospace" }}>${(balance / 100).toFixed(2)}</div>
+          <p className="text-sm text-zinc-400 mb-4">Track balance, reserve burn, and projected runway across the deck.</p>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-teal-400 shadow-lg animate-pulse"></div>
+              <span className="text-xs text-teal-400 lcars-label-strip">Ledger Link</span>
             </div>
-            <div className="bg-zinc-900/50 rounded-lg p-4 border border-rose-500/40">
-              <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Reserve Units</div>
-              <div className="text-2xl font-bold text-rose-400" style={{ fontFamily: "'Orbitron', monospace" }}>{balance.toLocaleString()}</div>
-            </div>
-            <div className="bg-zinc-900/50 rounded-lg p-4 border border-cyan-500/40">
-              <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Daily Burn</div>
-              <div className="text-2xl font-bold text-cyan-400" style={{ fontFamily: "'Orbitron', monospace" }}>{dailyBurn}</div>
-            </div>
-            <div className="bg-zinc-900/50 rounded-lg p-4 border border-violet-500/40">
-              <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Runway Estimate</div>
-              <div className="text-2xl font-bold text-violet-400" style={{ fontFamily: "'Orbitron', monospace" }}>{runway}</div>
-            </div>
+            <span className="text-xs text-zinc-500">Connected</span>
+            <span className="text-xs text-zinc-600">|</span>
+            <span className="text-xs text-zinc-500">Updated {new Date().toLocaleTimeString()}</span>
           </div>
         </LCARSPanel>
       </div>
-      <LCARSPanel title="Ledger Override" color="violet">
-        <div className="space-y-4">
-          <p className="text-sm text-zinc-400">Update the working balance to recalculate reserve units and projected runway.</p>
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label className="block text-xs text-zinc-500 mb-1">Manual Balance ($)</label>
-              <input type="number" step="0.01" value={manualBalance} onChange={(e) => setManualBalance(e.target.value)} placeholder={(balance / 100).toFixed(2)} className="w-full bg-zinc-900 border border-violet-500/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-400" />
-            </div>
-            <button onClick={handleCommit} className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-bold text-white hover:from-violet-500 hover:to-purple-500 transition-all">COMMIT UPDATE</button>
+      
+      {/* RESERVE STRIP */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        {[
+          { label: "Ledger Link", value: "Connected", detail: "synced", color: "#14b8a6" },
+          { label: "Fiscal Stability", value: "99", detail: "posture", color: "#f59e0b" },
+          { label: "Live Consumers", value: "4", detail: "drawing", color: "#06b6d4" },
+          { label: "Active Routines", value: "1", detail: "in cycle", color: "#8b5cf6" },
+          { label: "Credit Reserve", value: balance.toLocaleString(), detail: "units", color: "#ec4899" },
+          { label: "Open Routes", value: "67", detail: "outputs", color: "#06b6d4" }
+        ].map((item, i) => (
+          <div key={i} className="relative bg-zinc-900/80 rounded-lg p-3 border border-zinc-700/50 overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" style={{ background: item.color }}></div>
+            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">{item.label}</div>
+            <div className="text-xl font-bold lcars-font" style={{ color: item.color }}>{item.value}</div>
+            <div className="text-xs text-zinc-500">{item.detail}</div>
           </div>
-          {overrideActive && (
-            <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-              <div className="text-sm text-green-400 flex items-center gap-2"><CheckCircle className="w-4 h-4" />Ledger Recalculated</div>
-              <div className="text-xs text-zinc-400 mt-1">Updated Balance: ${(balance / 100).toFixed(2)} | Reserve: {balance.toLocaleString()} | Runway: {runway} days</div>
-            </div>
-          )}
+        ))}
+      </div>
+      
+      {/* RESERVE METRICS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="relative bg-zinc-900/80 rounded-lg p-4 border border-pink-500/40 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500"></div>
+          <div className="lcars-label-strip text-xs text-zinc-400 mb-2">Ledger Balance</div>
+          <div className="text-3xl font-bold lcars-font text-pink-400">${balanceUsd.toFixed(2)}</div>
+          <div className="text-sm text-zinc-500">current working balance</div>
         </div>
-      </LCARSPanel>
+        
+        <div className="relative bg-zinc-900/80 rounded-lg p-4 border border-cyan-500/40 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-violet-500"></div>
+          <div className="lcars-label-strip text-xs text-zinc-400 mb-2">Reserve Units</div>
+          <div className="text-3xl font-bold lcars-font text-cyan-400">{balance.toLocaleString()}</div>
+          <div className="text-sm text-zinc-500">estimated credits remaining</div>
+        </div>
+        
+        <div className="relative bg-zinc-900/80 rounded-lg p-4 border border-amber-500/40 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+          <div className="lcars-label-strip text-xs text-zinc-400 mb-2">Burn Ratio</div>
+          <div className="flex gap-1 mb-2">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="flex-1 h-6 rounded-sm" style={{
+                background: i < burnPercent / 10 ? `linear-gradient(180deg, ${i < 3 ? '#14b8a6' : i < 6 ? '#06b6d4' : i < 8 ? '#f59e0b' : '#ef4444'}, transparent)` : 'rgba(39, 39, 42, 0.5)'
+              }}></div>
+            ))}
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-amber-400">{burnPercent.toFixed(1)}% used</span>
+            <span className="text-zinc-500">current draw</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* LEDGER OVERRIDE */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-violet-500/10 to-cyan-500/10 blur-xl pointer-events-none"></div>
+        <div className="relative bg-zinc-900/90 rounded-lg border-2 border-pink-500/50 overflow-hidden" style={{ boxShadow: "0 0 40px rgba(236, 72, 153, 0.3)" }}>
+          <div className="h-1 bg-gradient-to-r from-pink-500 via-violet-500 to-cyan-500"></div>
+          <div className="p-4 border-b border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-transparent">
+            <h3 className="text-2xl font-bold lcars-font text-pink-400 tracking-wider">Ledger Override</h3>
+            <p className="text-sm text-zinc-400 mt-1">Update the working balance to recalculate reserve units, projected runway, and estimated remaining credits.</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="text-sm text-zinc-500 lcars-label-strip mb-2">Current State</div>
+              <div className="bg-zinc-800/50 rounded-lg p-3 border border-cyan-500/30">
+                <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Current Balance</div>
+                <div className="text-2xl font-bold lcars-font text-cyan-400">${balanceUsd.toFixed(2)}</div>
+              </div>
+              <div className="bg-zinc-800/50 rounded-lg p-3 border border-violet-500/30">
+                <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Estimated Credits Remaining</div>
+                <div className="text-2xl font-bold lcars-font text-violet-400">{balance.toLocaleString()}</div>
+              </div>
+              <div className="bg-zinc-800/50 rounded-lg p-3 border border-amber-500/30">
+                <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Runway Estimate</div>
+                <div className="text-2xl font-bold lcars-font text-amber-400">{runway} days</div>
+              </div>
+              <div className="bg-zinc-800/50 rounded-lg p-3 border border-teal-500/30">
+                <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Threshold State</div>
+                <div className={"text-2xl font-bold lcars-font " + threshold.color}>{threshold.state}</div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="text-sm text-zinc-500 lcars-label-strip mb-2">Manual Update</div>
+              <div className="relative">
+                <label className="block text-xs text-zinc-500 mb-1">Manual Balance ($)</label>
+                <input type="number" step="0.01" value={manualBalance} onChange={(e) => setManualBalance(e.target.value)} placeholder={balanceUsd.toFixed(2)} className="w-full bg-zinc-950 border-2 border-pink-500/50 rounded-lg px-4 py-3 text-white text-lg lcars-font focus:outline-none focus:border-pink-400 transition-all" style={{ boxShadow: "inset 0 0 20px rgba(236, 72, 153, 0.1)" }} />
+              </div>
+              <button onClick={handleCommit} className="w-full py-3 rounded-lg font-bold text-white lcars-font text-lg transition-all" style={{ background: "linear-gradient(135deg, #ec4899, #8b5cf6)", boxShadow: "0 0 20px rgba(236, 72, 153, 0.5)" }}>COMMIT UPDATE</button>
+              {overrideActive && (
+                <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle className="w-4 h-4 text-teal-400" />
+                    <span className="text-sm text-teal-400 lcars-font">Ledger Recalculated</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="text-zinc-400">Updated Balance:</div>
+                    <div className="text-cyan-400 lcars-font">${balanceUsd.toFixed(2)}</div>
+                    <div className="text-zinc-400">Reserve Units:</div>
+                    <div className="text-violet-400 lcars-font">{balance.toLocaleString()}</div>
+                    <div className="text-zinc-400">Projected Daily Burn:</div>
+                    <div className="text-amber-400 lcars-font">{dailyBurn}</div>
+                    <div className="text-zinc-400">Runway:</div>
+                    <div className="text-teal-400 lcars-font">{runway} days</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* LOWER PANELS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <LCARSPanel title="Burn Ledger" color="amber">
+          <p className="text-xs text-zinc-400 mb-3">Recent reserve draw across the last 7 entries</p>
+          <div className="grid grid-cols-7 gap-2">
+            {burnLedger.map((entry, i) => {
+              const maxBurn = Math.max(...burnLedger.map(e => e.burn));
+              const intensity = entry.burn / maxBurn;
+              return (
+                <div key={i} className="text-center">
+                  <div className="rounded-lg p-2 mb-1" style={{ background: `linear-gradient(180deg, rgba(245, 158, 11, ${intensity * 0.8}), rgba(245, 158, 11, ${intensity * 0.3}))` }}>
+                    <div className="text-lg font-bold lcars-font text-amber-400">{entry.burn}</div>
+                  </div>
+                  <div className="text-xs text-zinc-500">{entry.date}</div>
+                </div>
+              );
+            })}
+          </div>
+        </LCARSPanel>
+        <LCARSPanel title="Model Drain" color="cyan">
+          <p className="text-xs text-zinc-400 mb-3">Which models are drawing the most reserve</p>
+          <div className="space-y-3">
+            {modelDrain.map((model, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-zinc-200 truncate">{model.model}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-2 bg-violet-950/50 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: model.percent + "%", background: "linear-gradient(90deg, #06b6d4, #8b5cf6)" }}></div>
+                    </div>
+                    <div className="text-xs text-cyan-400 lcars-font w-12 text-right">{model.credits}</div>
+                  </div>
+                </div>
+                {i === 0 && <span className="text-xs text-amber-400 lcars-label-strip">highest</span>}
+              </div>
+            ))}
+          </div>
+        </LCARSPanel>
+      </div>
     </div>
   );
 }
-
 function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: boolean }) {
-  // NOSTROMO AUTOMATION TERMINAL THEME
-  // Industrial, dim, utilitarian, procedural - shipboard task control
-  
-  const totalCount = agents?.length ?? 0;
+  if (loading) return <div className="flex items-center justify-center h-64"><RefreshCw className="w-8 h-8 text-violet-400 animate-spin" /><span className="ml-3 text-lg text-violet-400">Scanning routines...</span></div>;
   const activeCount = agents?.filter(a => a.active).length ?? 0;
-  const pausedCount = totalCount - activeCount;
-  const coverage = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
-  
-  // Generate segmented bar segments
-  const generateSegments = (percent, total = 10) => {
-    const filled = Math.round((percent / 100) * total);
-    const segments = [];
-    for (let i = 0; i < total; i++) {
-      segments.push(i < filled);
-    }
-    return segments;
-  };
-  
-  // State mapping
-  const getStateDisplay = (active) => active ? "LIVE" : "PAUSED";
-  const getStateColor = (active) => active ? "text-green-400" : "text-zinc-500";
-  const getLampColor = (active) => active ? "bg-green-400 shadow-green-400/50" : "bg-zinc-600";
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 text-green-400 animate-spin" />
-        <span className="ml-3 text-lg text-green-400 lcars-font">Scanning routines...</span>
-      </div>
-    );
-  }
+  const totalCount = agents?.length ?? 0;
   
   return (
-    <div className="space-y-4">
-      {/* NOSTROMO TERMINAL HEADER */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Left: Automation Bay */}
-        <div className="bg-zinc-900/90 rounded-lg border border-green-500/30 overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-green-500/30 via-green-500/10 to-green-500/30"></div>
-          <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/30">
-            <div className="text-xs text-green-400/70 lcars-label-strip mb-1">AUTOMATION BAY</div>
-            <h3 className="text-2xl font-bold text-zinc-200 lcars-font tracking-wider">Automation Bay</h3>
+    <div className="space-y-6">
+      <LCARSPanel title="Automation Status" color="violet">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-zinc-900/50 rounded-lg p-4 border border-violet-500/40">
+            <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Active Routines</div>
+            <div className="text-2xl font-bold text-violet-400" style={{ fontFamily: "'Orbitron', monospace" }}>{activeCount}</div>
           </div>
-          <div className="p-4 bg-zinc-900/50">
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              Scheduled routines, next execution windows, and model assignments.
-            </p>
+          <div className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/40">
+            <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Total Agents</div>
+            <div className="text-2xl font-bold text-amber-400" style={{ fontFamily: "'Orbitron', monospace" }}>{totalCount}</div>
           </div>
-        </div>
-        
-        {/* Right: Ship Link */}
-        <div className="bg-zinc-900/90 rounded-lg border border-cyan-500/30 overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-cyan-500/30 via-cyan-500/10 to-cyan-500/30"></div>
-          <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/30">
-            <div className="text-xs text-cyan-400/70 lcars-label-strip mb-1">SHIP LINK</div>
-            <h3 className="text-2xl font-bold text-zinc-200 lcars-font tracking-wider">Ship Link</h3>
-          </div>
-          <div className="p-4 bg-zinc-900/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-green-400 shadow-green-400/50 shadow-lg animate-pulse"></div>
-              <span className="text-lg font-bold text-green-400 lcars-font">CONNECTED</span>
-            </div>
-            <div className="text-xs text-zinc-500 lcars-label-strip">
-              Updated {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </div>
+          <div className="bg-zinc-900/50 rounded-lg p-4 border border-cyan-500/40">
+            <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Coverage</div>
+            <div className="text-2xl font-bold text-cyan-400" style={{ fontFamily: "'Orbitron', monospace" }}>{totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0}%</div>
           </div>
         </div>
-      </div>
-      
-      {/* QUEUE METRICS - Segmented Industrial Style */}
-      <div className="bg-zinc-900/90 rounded-lg border border-zinc-600/30 overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-zinc-600/50 via-green-500/30 to-zinc-600/50"></div>
-        <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/20">
-          <div className="text-xs text-zinc-500 lcars-label-strip mb-1">ROUTINE DISPATCH BOARD</div>
-          <h3 className="text-2xl font-bold text-zinc-300 lcars-font tracking-wider">Routine Dispatch Board</h3>
-        </div>
-        <div className="p-4 bg-zinc-900/30">
-          <p className="text-sm text-zinc-500 mb-4">
-            Monitor ship routines, check dispatch state, and review model assignments across the active queue.
-          </p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* Total Routines */}
-            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
-              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Total Routines</div>
-              <div className="text-3xl font-bold text-zinc-200 lcars-font">{totalCount}</div>
-              <div className="text-xs text-zinc-600">registered ship routines</div>
-            </div>
-            
-            {/* Live Routines */}
-            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
-              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Live Routines</div>
-              <div className="text-3xl font-bold text-green-400 lcars-font">{activeCount}</div>
-              <div className="text-xs text-zinc-600">currently active</div>
-            </div>
-            
-            {/* Queue Coverage */}
-            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
-              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Queue Coverage</div>
-              <div className="text-3xl font-bold text-amber-400 lcars-font">{coverage.toFixed(1)}%</div>
-              <div className="text-xs text-zinc-600">active routine ratio</div>
-            </div>
-            
-            {/* Dispatch State */}
-            <div className="bg-zinc-800/50 rounded border border-zinc-600/40 p-3">
-              <div className="text-xs text-zinc-500 lcars-label-strip mb-1">Dispatch State</div>
-              <div className="text-3xl font-bold text-zinc-300 lcars-font">
-                {activeCount > 0 ? "ACTIVE" : "STANDBY"}
+      </LCARSPanel>
+      <LCARSPanel title="Agent Registry" color="violet">
+        <div className="space-y-2">
+          {(agents || []).map((agent) => (
+            <div key={agent.id} className="flex items-center gap-4 p-3 bg-zinc-900/50 rounded-lg border border-zinc-700/50 hover:border-violet-500/50 transition-all">
+              <div className={"w-3 h-3 rounded-full " + (agent.active ? "bg-green-400 shadow-lg shadow-green-400/50" : "bg-zinc-500")}></div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-zinc-200 truncate">{(agent.instruction || "No instruction").slice(0, 60)}...</div>
+                <div className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className={agent.active ? "text-green-400" : "text-zinc-500"}>{agent.active ? "ACTIVE" : "INACTIVE"}</span>
+                  <span className="text-zinc-600">|</span>
+                  <span>{agent.delivery_method || "none"}</span>
+                </div>
               </div>
-              <div className="text-xs text-zinc-600">queue state</div>
+              <ChevronRight className="w-4 h-4 text-zinc-600" />
             </div>
-          </div>
-          
-          {/* Segmented Queue Bar */}
-          <div className="mt-4 bg-zinc-800/30 rounded p-3 border border-zinc-700/30">
-            <div className="text-xs text-zinc-500 lcars-label-strip mb-2">QUEUE METER</div>
-            <div className="flex gap-1">
-              {generateSegments(coverage, 20).map((filled, i) => (
-                <div 
-                  key={i} 
-                  className={"h-4 flex-1 rounded-sm " + (filled ? "bg-green-400/70 shadow-sm shadow-green-400/30" : "bg-zinc-700/30")}
-                ></div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-1 text-xs text-zinc-600 lcars-label-strip">
-              <span>0%</span>
-              <span>{coverage.toFixed(1)}% COVERAGE</span>
-              <span>100%</span>
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
-      
-      {/* SHIP ROUTINES LIST */}
-      <div className="bg-zinc-900/90 rounded-lg border border-zinc-600/30 overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-zinc-600/50 via-green-500/30 to-zinc-600/50"></div>
-        <div className="px-4 py-3 border-b border-zinc-700/50 bg-zinc-800/20">
-          <div className="text-xs text-zinc-500 lcars-label-strip mb-1">SHIP ROUTINES</div>
-          <h3 className="text-2xl font-bold text-zinc-300 lcars-font tracking-wider">Ship Routines</h3>
-          <p className="text-sm text-zinc-500 mt-1">Standing automations, dispatch windows, and assigned models.</p>
-        </div>
-        <div className="p-3 bg-zinc-900/30">
-          {agents && agents.length > 0 ? (
-            <div className="space-y-2">
-              {agents.map((agent, index) => {
-                const routineNum = "RTN-" + String(index + 1).padStart(2, '0');
-                const state = getStateDisplay(agent.active);
-                const stateColor = getStateColor(agent.active);
-                const lampColor = getLampColor(agent.active);
-                const model = agent.rrule ? "scheduled" : "manual";
-                const nextDispatch = agent.active ? "pending" : "no schedule";
-                
-                return (
-                  <div 
-                    key={agent.id}
-                    className="flex items-center gap-3 p-3 bg-zinc-800/40 rounded border border-zinc-700/30 hover:border-green-500/30 transition-all"
-                  >
-                    <div className={"w-2 h-2 rounded-full " + lampColor + (agent.active ? " animate-pulse" : "")}></div>
-                    <div className="text-xs text-zinc-500 lcars-font w-14 flex-shrink-0">{routineNum}</div>
-                    <div className="w-px h-8 bg-zinc-700/50"></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-zinc-200 truncate font-medium">
-                        {(agent.instruction || "Unnamed Routine").slice(0, 50)}...
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
-                        <span className={stateColor}>{state}</span>
-                        <span className="text-zinc-600">|</span>
-                        <span className="text-cyan-400/70">Model: {model}</span>
-                        <span className="text-zinc-600">|</span>
-                        <span className="text-amber-400/70">Next: {nextDispatch}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-600" />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-zinc-500">
-              <Bot className="w-12 h-12 mx-auto mb-3 text-zinc-600" />
-              <div className="text-lg lcars-font">NO ROUTINES REGISTERED</div>
-              <div className="text-sm mt-1">Ship automation queue is empty</div>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer Stats */}
-        <div className="px-4 py-3 border-t border-zinc-700/50 bg-zinc-800/20">
-          <div className="flex items-center justify-between text-xs text-zinc-500">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                Live: {activeCount}
-              </span>
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
-                Paused: {pausedCount}
-              </span>
-            </div>
-            <span className="lcars-label-strip">QUEUE AWAITING NEXT WINDOWS</span>
-          </div>
-        </div>
-      </div>
+      </LCARSPanel>
     </div>
   );
 }
