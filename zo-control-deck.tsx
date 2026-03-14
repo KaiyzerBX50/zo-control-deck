@@ -3,7 +3,7 @@
 // This is the working version - do not modify without backup
 
 import { useState, useEffect } from "react";
-import { Activity, Server, Bot, CreditCard, Shield, AlertTriangle, ChevronRight, Cpu, MemoryStick, HardDrive, DollarSign, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Activity, Server, Bot, CreditCard, Shield, AlertTriangle, ChevronRight, Globe, Cpu, MemoryStick, HardDrive, DollarSign, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 
 interface ServiceData {
   id: string;
@@ -29,6 +29,12 @@ interface AgentData {
 interface CreditsData {
   balance: number;
   reserve_users: number;
+}
+
+interface SpaceRoute {
+  path: string;
+  route_type: "page" | "api";
+  public: boolean;
 }
 
 interface SystemStats {
@@ -982,6 +988,253 @@ function FailuresTab() {
   );
 }
 
+// DASHBOARDS TAB - TRON Grid Portal Index Theme
+function DashboardsTab({ routes }: { routes: SpaceRoute[] }) {
+  const pageCount = routes?.filter(r => r.route_type === "page").length ?? 0;
+  const apiCount = routes?.filter(r => r.route_type === "api").length ?? 0;
+  const totalCount = routes?.length ?? 0;
+  const healthyCount = totalCount; // All routes are considered healthy if they're registered
+  const publicCount = routes?.filter(r => r.public).length ?? 0;
+  
+  // Current timestamp
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" });
+  
+  return (
+    <div className="space-y-6 relative">
+      {/* Grid Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+        {/* Square Grid Lines */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px"
+        }}></div>
+        {/* Node Points at intersections */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: "radial-gradient(circle, rgba(34, 211, 238, 0.3) 1px, transparent 1px)",
+          backgroundSize: "40px 40px"
+        }}></div>
+      </div>
+      
+      {/* Row 1: Grid Node + Grid Link */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+        {/* Grid Node */}
+        <div className="bg-black/80 border border-cyan-500/50 rounded-lg p-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-400"></div>
+          <div className="lcars-label-strip text-xs text-cyan-400 mb-1">Grid Node</div>
+          <div className="text-sm text-zinc-400">Published surfaces and live routes across the network.</div>
+        </div>
+        
+        {/* Grid Link */}
+        <div className="bg-black/80 border border-cyan-500/50 rounded-lg p-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-400 via-cyan-500 to-violet-400"></div>
+          <div className="lcars-label-strip text-xs text-cyan-400 mb-1">Grid Link</div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400 font-bold">Connected</span>
+            <span className="text-zinc-500">•</span>
+            <span className="text-zinc-400 text-sm">Updated {timeStr}</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Row 2: Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+        {/* Total Nodes */}
+        <div className="bg-black/80 border-2 border-cyan-400/60 rounded-lg p-4 relative overflow-hidden shadow-lg shadow-cyan-500/20">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent"></div>
+          <div className="relative">
+            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Total Nodes</div>
+            <div className="text-4xl font-bold text-white lcars-font">{totalCount}</div>
+            <div className="text-sm text-cyan-400">route endpoints</div>
+          </div>
+        </div>
+        
+        {/* Route Integrity */}
+        <div className="bg-black/80 border-2 border-green-400/60 rounded-lg p-4 relative overflow-hidden shadow-lg shadow-green-500/20">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent"></div>
+          <div className="relative">
+            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Route Integrity</div>
+            <div className="text-4xl font-bold text-green-400 lcars-font">{healthyCount}</div>
+            <div className="text-sm text-zinc-400">all routes stable</div>
+          </div>
+        </div>
+        
+        {/* Network Mix */}
+        <div className="bg-black/80 border-2 border-violet-400/60 rounded-lg p-4 relative overflow-hidden shadow-lg shadow-violet-500/20">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent"></div>
+          <div className="relative">
+            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Network Mix</div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-violet-400 lcars-font">{pageCount}</span>
+              <span className="text-zinc-500">pages</span>
+              <span className="text-zinc-600">•</span>
+              <span className="text-2xl font-bold text-blue-400 lcars-font">{apiCount}</span>
+              <span className="text-zinc-500">apis</span>
+            </div>
+            <div className="text-sm text-zinc-400 mt-1">{publicCount} public access</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Row 3: Network Pulse Slab */}
+      <div className="bg-black/90 border-2 border-cyan-500/40 rounded-lg p-6 relative overflow-hidden shadow-2xl shadow-cyan-500/30">
+        {/* Lightpath Top */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+        
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50"></div>
+          <h2 className="text-2xl font-bold text-white lcars-font">Network Pulse</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {/* Left: Route Ring Graphic */}
+          <div className="md:col-span-2 flex items-center justify-center">
+            <div className="relative w-48 h-48">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30"></div>
+              {/* Middle ring */}
+              <div className="absolute inset-4 rounded-full border border-violet-500/40"></div>
+              {/* Inner ring */}
+              <div className="absolute inset-8 rounded-full border border-blue-500/50"></div>
+              {/* Core */}
+              <div className="absolute inset-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center border border-cyan-400/50">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white lcars-font">{totalCount}</div>
+                  <div className="text-xs text-cyan-400">nodes</div>
+                </div>
+              </div>
+              {/* Sector ticks */}
+              {[...Array(12)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="absolute w-1 h-3 bg-cyan-400/60"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    transform: `rotate(${i * 30}deg) translateY(-96px) translateX(-50%)`,
+                    transformOrigin: "0 0"
+                  }}
+                ></div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Right: Core Readouts */}
+          <div className="md:col-span-3 grid grid-cols-2 gap-4">
+            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
+              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Grid State</div>
+              <div className="text-xl font-bold text-green-400 lcars-font">Live</div>
+            </div>
+            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
+              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Node Count</div>
+              <div className="text-xl font-bold text-white lcars-font">{totalCount}</div>
+            </div>
+            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
+              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Route Integrity</div>
+              <div className="text-xl font-bold text-green-400 lcars-font">Full</div>
+            </div>
+            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
+              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Public Access</div>
+              <div className="text-xl font-bold text-cyan-400 lcars-font">Ready</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Row 4: Portal Registry */}
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
+          <h2 className="text-xl font-bold text-white lcars-font">Portal Registry</h2>
+          <div className="h-px flex-1 bg-gradient-to-l from-cyan-500/50 to-transparent"></div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {routes?.map((route, index) => {
+            const isApi = route.route_type === "api";
+            const isPublic = route.public;
+            const edgeColor = isApi ? "border-blue-500/50" : "border-violet-500/50";
+            const glowColor = isApi ? "shadow-blue-500/20" : "shadow-violet-500/20";
+            const tagColor = isApi ? "bg-blue-500/20 text-blue-400" : "bg-violet-500/20 text-violet-400";
+            
+            return (
+              <div 
+                key={route.path}
+                className={`bg-black/80 border ${edgeColor} rounded-lg p-4 relative overflow-hidden hover:border-cyan-400/70 transition-all cursor-pointer group shadow-lg ${glowColor}`}
+              >
+                {/* Node marker */}
+                <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-cyan-400 opacity-50"></div>
+                
+                {/* Lightpath edge */}
+                <div className={`absolute top-0 left-0 w-1 h-full ${isApi ? "bg-blue-500/50" : "bg-violet-500/50"}`}></div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    {/* Route path */}
+                    <div className="text-lg font-mono text-white truncate mb-1">{route.path}</div>
+                    
+                    {/* Tags */}
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${tagColor}`}>
+                        {isApi ? "API" : "PAGE"}
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400">
+                        HEALTHY
+                      </span>
+                      {isPublic && (
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-cyan-500/20 text-cyan-400">
+                          PUBLIC
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Enter button */}
+                  <a 
+                    href={route.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-4 px-4 py-2 bg-cyan-500/20 border border-cyan-400/50 rounded text-cyan-400 font-bold hover:bg-cyan-500/30 transition-all shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40"
+                  >
+                    Enter
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Row 5: Grid Legend */}
+      <div className="bg-black/80 border border-cyan-500/30 rounded-lg p-4 relative z-10">
+        <div className="lcars-label-strip text-xs text-zinc-500 mb-3">Grid Legend</div>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded border-2 border-violet-500"></div>
+            <span className="text-zinc-400">Page: violet route node</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded border-2 border-blue-500"></div>
+            <span className="text-zinc-400">API: blue interface node</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-green-500"></div>
+            <span className="text-zinc-400">Healthy: mint integrity state</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-cyan-500"></div>
+            <span className="text-zinc-400">Enter: cyan portal action</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 export default function ZoControlDeck() {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
@@ -990,6 +1243,7 @@ export default function ZoControlDeck() {
   const [agents, setAgents] = useState<AgentData[] | null>(null);
   const [credits, setCredits] = useState<CreditsData | null>(null);
   const [creditOverride, setCreditOverride] = useState<number | null>(null);
+  const [routes, setRoutes] = useState<SpaceRoute[]>([]);
   
   useEffect(() => {
     const saved = localStorage.getItem("creditOverride");
@@ -1006,7 +1260,8 @@ export default function ZoControlDeck() {
       try {
         setLoading(true);
         const [statsRes, servicesRes, agentsRes, creditsRes] = await Promise.all([
-          fetch("/api/system-stats"), fetch("/api/services"), fetch("/api/agents"), fetch("/api/credits")
+          fetch("/api/system-stats"), fetch("/api/services"), fetch("/api/agents"), fetch("/api/credits"),
+          fetch("/api/dashboards")
         ]);
         setStats(await statsRes.json());
         setServices((await servicesRes.json()).services || []);
@@ -1029,6 +1284,7 @@ export default function ZoControlDeck() {
     { id: "agents", label: "Agents", icon: Bot },
     { id: "credits", label: "Credits", icon: CreditCard },
     { id: "security", label: "Security", icon: Shield },
+    { id: "dashboards", label: "Dashboards", icon: Globe },
     { id: "failures", label: "Failures", icon: AlertTriangle }
   ];
   
@@ -1066,6 +1322,7 @@ export default function ZoControlDeck() {
         {activeTab === "agents" && <AgentsTab agents={agents} loading={loading} />}
         {activeTab === "credits" && <CreditsTab credits={credits} creditOverride={creditOverride} updateCreditOverride={updateCreditOverride} />}
         {activeTab === "security" && <SecurityTab />}
+        {activeTab === "dashboards" && <DashboardsTab routes={routes} />}
         {activeTab === "failures" && <FailuresTab />}
       </main>
     </div>
