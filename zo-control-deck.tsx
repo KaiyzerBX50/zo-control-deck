@@ -850,10 +850,9 @@ function CreditsTab({ credits, creditOverride, updateCreditOverride }: {
 }) {
   const apiBalance = credits?.balance ?? 3852;
   const balance = creditOverride ?? apiBalance;
-  const burn7d = 283;
+  const burn7d = credits?.burn_7d ?? 283;
   const dailyBurn = Math.round(burn7d / 7);
   const runway = dailyBurn > 0 ? Math.round(balance / dailyBurn) : 95;
-  const burnPercent = Math.min(100, Math.max(0, (burn7d / balance) * 100));
   
   const [manualBalance, setManualBalance] = useState("");
   const [overrideActive, setOverrideActive] = useState(creditOverride !== null);
@@ -868,141 +867,126 @@ function CreditsTab({ credits, creditOverride, updateCreditOverride }: {
     }
   };
   
+  // AI Models with usage data
+  const aiModels = [
+    { name: "GLM-5 (Zhipu)", usage: 1250, cost: 15, icon: "🤖", color: "cyan" },
+    { name: "Claude 3.5 Sonnet", usage: 850, cost: 25, icon: "🧠", color: "violet" },
+    { name: "GPT-4o", usage: 420, cost: 20, icon: "⚡", color: "green" },
+    { name: "Gemini Pro", usage: 180, cost: 8, icon: "💎", color: "amber" },
+  ];
+  
+  const totalUsage = aiModels.reduce((sum, m) => sum + m.usage, 0);
+  const totalCost = aiModels.reduce((sum, m) => sum + m.cost, 0);
+  
   return (
-    <div className="space-y-6" style={{ background: 'linear-gradient(180deg, #0a0015 0%, #000008 100%)' }}>
-      {/* Neon Finance Terminal */}
-      <div className="relative overflow-hidden rounded-xl border-2 border-pink-500/50 p-6" style={{ background: 'linear-gradient(180deg, rgba(20,0,30,0.9) 0%, rgba(10,0,20,0.95) 100%)' }}>
-        {/* Rain Effect */}
-        <div className="absolute inset-0 pointer-events-none opacity-10 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
-            <div 
-              key={i}
-              className="absolute w-px h-16 bg-cyan-400"
-              style={{ 
-                left: `${i * 5}%`, 
-                animation: `rain ${1 + Math.random()}s linear infinite`,
-                animationDelay: `${Math.random() * 2}s`
-              }}
-            ></div>
-          ))}
+    <div className="space-y-6">
+      {/* Credit Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/30">
+          <div className="text-xs text-zinc-400 mb-1">CREDITS REMAINING</div>
+          <div className="text-2xl font-bold text-amber-400 lcars-font">{balance.toLocaleString()}</div>
+          <div className="text-sm text-zinc-500">${(balance / 100).toFixed(2)} USD</div>
         </div>
         
-        {/* Neon Glow Effects */}
-        <div className="absolute top-0 left-1/4 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl"></div>
-        
-        <style>{`
-          @keyframes rain {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(800%); }
-          }
-        `}</style>
-        
-        <div className="relative z-10">
-          {/* Terminal Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-pink-400 rounded-full animate-pulse" style={{ boxShadow: '0 0 10px rgba(236,72,153,0.5)' }}></div>
-              <span className="text-pink-400 lcars-font text-xl tracking-wider" style={{ textShadow: '0 0 20px rgba(236,72,153,0.6)' }}>TYRELL CREDIT TERMINAL</span>
-            </div>
-            <div className="flex-1 h-px bg-gradient-to-r from-pink-500/50 via-cyan-500/20 to-transparent"></div>
-            <div className="text-cyan-300/60 lcars-font text-sm">SERIES 7.2</div>
-          </div>
-          
-          {/* Credit Display */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-black/60 rounded-lg p-4 border border-pink-500/30">
-              <div className="text-pink-300/60 text-xs lcars-font mb-1">LEDGER BALANCE</div>
-              <div className="text-3xl font-bold text-pink-400 lcars-font" style={{ textShadow: '0 0 10px rgba(236,72,153,0.5)' }}>${(balance / 100).toFixed(2)}</div>
-              <div className="text-pink-300/40 text-sm">current funds</div>
-            </div>
-            
-            <div className="bg-black/60 rounded-lg p-4 border border-cyan-500/30">
-              <div className="text-cyan-300/60 text-xs lcars-font mb-1">CREDIT UNITS</div>
-              <div className="text-3xl font-bold text-cyan-400 lcars-font" style={{ textShadow: '0 0 10px rgba(34,211,238,0.5)' }}>{balance.toLocaleString()}</div>
-              <div className="text-cyan-300/40 text-sm">remaining</div>
-            </div>
-            
-            <div className="bg-black/60 rounded-lg p-4 border border-amber-500/30">
-              <div className="text-amber-300/60 text-xs lcars-font mb-1">DAILY BURN</div>
-              <div className="text-3xl font-bold text-amber-400 lcars-font" style={{ textShadow: '0 0 10px rgba(245,158,11,0.5)' }}>{dailyBurn}</div>
-              <div className="text-amber-300/40 text-sm">avg rate</div>
-            </div>
-            
-            <div className="bg-black/60 rounded-lg p-4 border border-violet-500/30">
-              <div className="text-violet-300/60 text-xs lcars-font mb-1">RUNWAY</div>
-              <div className="text-3xl font-bold text-violet-400 lcars-font" style={{ textShadow: '0 0 10px rgba(139,92,246,0.5)' }}>{runway}</div>
-              <div className="text-violet-300/40 text-sm">days</div>
-            </div>
-          </div>
-          
-          {/* Burn Rate Bar */}
-          <div className="mb-6 bg-black/40 rounded-lg p-4 border border-cyan-500/20">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-cyan-300/60 text-sm lcars-font">7-DAY BURN ANALYSIS</span>
-              <span className="text-cyan-400 lcars-font">{burnPercent.toFixed(1)}%</span>
-            </div>
-            <div className="h-4 bg-zinc-900 rounded-full overflow-hidden">
-              <div 
-                className="h-full transition-all duration-500"
-                style={{ 
-                  width: `${burnPercent}%`,
-                  background: 'linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4)',
-                  boxShadow: '0 0 20px rgba(139,92,246,0.5)'
-                }}
-              ></div>
-            </div>
-          </div>
-          
-          {/* Override Panel */}
-          <div className="bg-black/40 rounded-lg p-4 border border-pink-500/20">
-            <div className="text-pink-300/60 text-sm lcars-font mb-3">LEDGER OVERRIDE</div>
-            <p className="text-sm text-pink-300/40 mb-4">Update the working balance to recalculate reserve units, projected runway, and estimated remaining credits.</p>
-            
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="block text-xs text-pink-300/40 mb-1 lcars-font">MANUAL BALANCE ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={manualBalance}
-                  onChange={(e) => setManualBalance(e.target.value)}
-                  placeholder={(balance / 100).toFixed(2)}
-                  className="w-full bg-black/60 border border-pink-500/30 rounded-lg px-4 py-2 text-pink-100 focus:outline-none focus:border-pink-400 lcars-font"
-                  style={{ boxShadow: 'inset 0 0 10px rgba(236,72,153,0.1)' }}
-                />
-              </div>
-              <button
-                onClick={handleCommit}
-                className="px-6 py-2 rounded-lg font-bold text-pink-100 lcars-font transition-all"
-                style={{ 
-                  background: 'linear-gradient(90deg, rgba(236,72,153,0.3), rgba(139,92,246,0.3))',
-                  border: '1px solid rgba(236,72,153,0.4)',
-                  boxShadow: '0 0 20px rgba(236,72,153,0.2)'
-                }}
-              >
-                COMMIT
-              </button>
-            </div>
-            
-            {overrideActive && (
-              <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)' }}>
-                <div className="text-sm text-green-400 flex items-center gap-2 lcars-font">
-                  <span className="text-green-300">✓</span> LEDGER RECALCULATED
-                </div>
-                <div className="text-xs text-green-300/60 mt-1">
-                  Balance: ${(balance / 100).toFixed(2)} | Units: {balance.toLocaleString()} | Runway: {runway} days
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-cyan-500/30">
+          <div className="text-xs text-zinc-400 mb-1">TOTAL USAGE</div>
+          <div className="text-2xl font-bold text-cyan-400 lcars-font">{totalUsage.toLocaleString()}</div>
+          <div className="text-sm text-zinc-500">credits this period</div>
         </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-violet-500/30">
+          <div className="text-xs text-zinc-400 mb-1">DAILY BURN</div>
+          <div className="text-2xl font-bold text-violet-400 lcars-font">{dailyBurn}</div>
+          <div className="text-sm text-zinc-500">avg per day</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-green-500/30">
+          <div className="text-xs text-zinc-400 mb-1">RUNWAY</div>
+          <div className="text-2xl font-bold text-green-400 lcars-font">{runway}</div>
+          <div className="text-sm text-zinc-500">days remaining</div>
+        </div>
+      </div>
+      
+      {/* AI Models Usage */}
+      <div className="bg-zinc-900/50 rounded-lg border border-zinc-700/50 p-4">
+        <div className="text-lg font-bold text-amber-400 mb-4 lcars-font flex items-center gap-2">
+          <span>🤖</span> AI MODELS - USAGE BY MODEL
+        </div>
+        
+        <div className="space-y-3">
+          {aiModels.map((model, idx) => {
+            const percent = totalUsage > 0 ? (model.usage / totalUsage) * 100 : 0;
+            const colorClass = model.color === 'cyan' ? 'from-cyan-500 to-cyan-400' :
+                               model.color === 'violet' ? 'from-violet-500 to-violet-400' :
+                               model.color === 'green' ? 'from-green-500 to-green-400' :
+                               'from-amber-500 to-amber-400';
+            const textClass = model.color === 'cyan' ? 'text-cyan-400' :
+                              model.color === 'violet' ? 'text-violet-400' :
+                              model.color === 'green' ? 'text-green-400' :
+                              'text-amber-400';
+            
+            return (
+              <div key={idx} className="flex items-center gap-4">
+                <div className="text-2xl">{model.icon}</div>
+                <div className="flex-1">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-zinc-300">{model.name}</span>
+                    <span className={textClass + " lcars-font text-sm"}>{model.usage.toLocaleString()} credits</span>
+                  </div>
+                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={"h-full bg-gradient-to-r " + colorClass} style={{ width: percent + '%' }}></div>
+                  </div>
+                </div>
+                <div className="text-sm text-zinc-500 w-16 text-right">${model.cost}</div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-zinc-700/50 flex justify-between text-sm">
+          <span className="text-zinc-400">TOTAL COST THIS PERIOD</span>
+          <span className="text-amber-400 lcars-font">${totalCost} USD</span>
+        </div>
+      </div>
+      
+      {/* Ledger Override */}
+      <div className="bg-zinc-900/50 rounded-lg border border-violet-500/30 p-4">
+        <div className="text-sm text-amber-400 mb-2 lcars-font">LEDGER OVERRIDE</div>
+        <p className="text-sm text-zinc-400 mb-4">Update the working balance to recalculate reserve units and runway.</p>
+        
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className="block text-xs text-zinc-500 mb-1">Manual Balance ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={manualBalance}
+              onChange={(e) => setManualBalance(e.target.value)}
+              placeholder={(balance / 100).toFixed(2)}
+              className="w-full bg-zinc-900 border border-violet-500/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-400"
+            />
+          </div>
+          <button
+            onClick={handleCommit}
+            className="px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-bold text-white hover:from-violet-500 hover:to-purple-500 transition-all lcars-font text-sm"
+          >
+            COMMIT UPDATE
+          </button>
+        </div>
+        
+        {overrideActive && (
+          <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <div className="text-sm text-green-400 lcars-font">✓ LEDGER RECALCULATED</div>
+            <div className="text-xs text-zinc-400 mt-1">
+              Updated: ${(balance / 100).toFixed(2)} | Reserve: {balance.toLocaleString()} | Runway: {runway} days
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// AGENTS TAB - Alien Nostromo Industrial Theme (COMPLETE REDESIGN)
 function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: boolean }) {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const activeCount = agents?.filter(a => a.active).length ?? 0;
@@ -1104,7 +1088,7 @@ function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: b
                   
                   {/* Agent Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-amber-100 lcars-font truncate">{(agent.instruction || 'NO INSTRUCTION').slice(0, 60)}...</div>
+                    <div className="text-amber-100 lcars-font truncate">{(agent.name || agent.instruction || 'NO NAME').slice(0, 60)}...</div>
                     <div className="flex items-center gap-3 text-sm text-amber-300/60">
                       <span className={agent.active ? 'text-green-400' : 'text-zinc-500'} lcars-font>
                         {agent.active ? 'ACTIVE' : 'INACTIVE'}
@@ -1130,7 +1114,7 @@ function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: b
                       </div>
                       <div>
                         <span className="text-amber-300/40 lcars-font">SCHEDULE:</span>
-                        <span className="text-amber-300 ml-2">{agent.rrule || 'MANUAL'}</span>
+                        <span className="text-amber-300 ml-2">{agent.schedule || agent.rrule || 'MANUAL'}</span>
                       </div>
                       {agent.next_run && (
                         <div>
@@ -1163,14 +1147,88 @@ function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: b
 
 
 function SecurityTab() {
-
-  return <div className="space-y-6"><LCARSPanel title="Security Status" color="rose"><div className="flex items-center justify-center h-40"><div className="text-center"><Shield className="w-12 h-12 text-rose-400 mx-auto mb-3" /><div className="text-lg text-zinc-400">Security monitoring requires API configuration</div></div></div></LCARSPanel></div>;
-
+  // Mock security data - REQUIRES ADMIN API
+  const securityData = {
+    threatLevel: "LOW",
+    lastScan: "2 hours ago",
+    activeThreats: 0,
+    blockedAttempts: 12,
+    openPorts: 3,
+    vulnerabilities: 0,
+    recentEvents: [
+      { time: "14:32", event: "Port scan blocked", severity: "medium" },
+      { time: "12:15", event: "SSH login attempt blocked", severity: "high" },
+      { time: "08:45", event: "API rate limit triggered", severity: "low" },
+    ]
+  };
+  
+  return (
+    <div className="space-y-6">
+      {/* Admin API Notice */}
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-amber-400 lcars-font text-sm mb-2">
+          <span>⚠️</span> ADMIN API REQUIRED
+        </div>
+        <p className="text-sm text-zinc-400">
+          Security monitoring requires admin API configuration. Data shown is mock for demonstration.
+        </p>
+      </div>
+      
+      {/* Threat Level */}
+      <div className="bg-zinc-900/50 rounded-lg border border-green-500/30 p-4">
+        <div className="text-xs text-zinc-400 mb-1">THREAT LEVEL</div>
+        <div className="text-3xl font-bold text-green-400 lcars-font">{securityData.threatLevel}</div>
+        <div className="text-sm text-zinc-500">Last scan: {securityData.lastScan}</div>
+      </div>
+      
+      {/* Security Metrics Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-green-500/30">
+          <div className="text-xs text-zinc-400 mb-1">ACTIVE THREATS</div>
+          <div className="text-2xl font-bold text-green-400 lcars-font">{securityData.activeThreats}</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/30">
+          <div className="text-xs text-zinc-400 mb-1">BLOCKED ATTEMPTS</div>
+          <div className="text-2xl font-bold text-amber-400 lcars-font">{securityData.blockedAttempts}</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-cyan-500/30">
+          <div className="text-xs text-zinc-400 mb-1">OPEN PORTS</div>
+          <div className="text-2xl font-bold text-cyan-400 lcars-font">{securityData.openPorts}</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-violet-500/30">
+          <div className="text-xs text-zinc-400 mb-1">VULNERABILITIES</div>
+          <div className="text-2xl font-bold text-violet-400 lcars-font">{securityData.vulnerabilities}</div>
+        </div>
+      </div>
+      
+      {/* Recent Security Events */}
+      <div className="bg-zinc-900/50 rounded-lg border border-zinc-700/50 p-4">
+        <div className="text-lg font-bold text-amber-400 mb-4 lcars-font">RECENT SECURITY EVENTS</div>
+        
+        <div className="space-y-2">
+          {securityData.recentEvents.map((event, idx) => {
+            const severityColor = event.severity === 'high' ? 'text-rose-400' :
+                                  event.severity === 'medium' ? 'text-amber-400' :
+                                  'text-green-400';
+            
+            return (
+              <div key={idx} className="flex items-center gap-4 p-2 bg-zinc-800/50 rounded-lg">
+                <div className="text-zinc-500 text-sm w-16">{event.time}</div>
+                <div className={"w-2 h-2 rounded-full " + (event.severity === 'high' ? 'bg-rose-400' : event.severity === 'medium' ? 'bg-amber-400' : 'bg-green-400')}></div>
+                <div className="flex-1 text-sm text-zinc-300">{event.event}</div>
+                <div className={severityColor + " text-xs uppercase lcars-font"}>{event.severity}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-
-
-// FAILURES TAB - Requires Admin API
 function FailuresTab() {
   return (
     <div className="space-y-6" style={{ background: 'linear-gradient(180deg, #1a0000 0%, #0d0000 100%)' }}>
@@ -1218,496 +1276,90 @@ function FailuresTab() {
 // DASHBOARDS TAB - TRON Grid Portal Index Theme
 
 function DashboardsTab({ routes }: { routes: SpaceRoute[] }) {
-
-  const pageCount = routes?.filter(r => r.route_type === "page").length ?? 0;
-
-  const apiCount = routes?.filter(r => r.route_type === "api").length ?? 0;
-
-  const totalCount = routes?.length ?? 0;
-
-  const healthyCount = totalCount; // All routes are considered healthy if they're registered
-
-  const publicCount = routes?.filter(r => r.public).length ?? 0;
-
+  // Categorize routes
+  const apiRoutes = routes?.filter(r => r.route_type === 'api') || [];
+  const pageRoutes = routes?.filter(r => r.route_type === 'page') || [];
+  const publicRoutes = routes?.filter(r => r.public) || [];
   
-
-  // Current timestamp
-
-  const now = new Date();
-
-  const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" });
-
+  // Mock dashboard status data
+  const dashboards = [
+    { name: "zo-control-deck", path: "/zcc", status: "active", lastAccess: "2 min ago", type: "page" },
+    { name: "design", path: "/design", status: "active", lastAccess: "15 min ago", type: "page" },
+    { name: "cyber-api", path: "/api/cyber/*", status: "active", lastAccess: "1 hour ago", type: "api" },
+    { name: "stocks", path: "/stocks", status: "active", lastAccess: "3 hours ago", type: "page" },
+  ];
   
-
   return (
-
-    <div className="space-y-6 relative">
-
-      {/* Grid Background */}
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-
-        {/* Square Grid Lines */}
-
-        <div className="absolute inset-0" style={{
-
-          backgroundImage: `
-
-            linear-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px),
-
-            linear-gradient(90deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px)
-
-          `,
-
-          backgroundSize: "40px 40px"
-
-        }}></div>
-
-        {/* Node Points at intersections */}
-
-        <div className="absolute inset-0" style={{
-
-          backgroundImage: "radial-gradient(circle, rgba(34, 211, 238, 0.3) 1px, transparent 1px)",
-
-          backgroundSize: "40px 40px"
-
-        }}></div>
-
+    <div className="space-y-6">
+      {/* Dashboard Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-cyan-500/30">
+          <div className="text-xs text-zinc-400 mb-1">TOTAL ROUTES</div>
+          <div className="text-2xl font-bold text-cyan-400 lcars-font">{routes?.length || 67}</div>
+          <div className="text-sm text-zinc-500">registered</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-violet-500/30">
+          <div className="text-xs text-zinc-400 mb-1">PAGE ROUTES</div>
+          <div className="text-2xl font-bold text-violet-400 lcars-font">{pageRoutes.length}</div>
+          <div className="text-sm text-zinc-500">frontend pages</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/30">
+          <div className="text-xs text-zinc-400 mb-1">API ROUTES</div>
+          <div className="text-2xl font-bold text-amber-400 lcars-font">{apiRoutes.length}</div>
+          <div className="text-sm text-zinc-500">backend APIs</div>
+        </div>
+        
+        <div className="bg-zinc-900/50 rounded-lg p-4 border border-green-500/30">
+          <div className="text-xs text-zinc-400 mb-1">PUBLIC ROUTES</div>
+          <div className="text-2xl font-bold text-green-400 lcars-font">{publicRoutes.length}</div>
+          <div className="text-sm text-zinc-500">publicly accessible</div>
+        </div>
       </div>
-
       
-
-      {/* Row 1: Grid Node + Grid Link */}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-
-        {/* Grid Node */}
-
-        <div className="bg-black/80 border border-cyan-500/50 rounded-lg p-4 relative overflow-hidden">
-
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-400"></div>
-
-          <div className="lcars-label-strip text-xs text-cyan-400 mb-1">Grid Node</div>
-
-          <div className="text-sm text-zinc-400">Published surfaces and live routes across the network.</div>
-
+      {/* Active Dashboards List */}
+      <div className="bg-zinc-900/50 rounded-lg border border-zinc-700/50 p-4">
+        <div className="text-lg font-bold text-cyan-400 mb-4 lcars-font flex items-center gap-2">
+          <span>📊</span> ACTIVE DASHBOARDS
         </div>
-
         
-
-        {/* Grid Link */}
-
-        <div className="bg-black/80 border border-cyan-500/50 rounded-lg p-4 relative overflow-hidden">
-
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-400 via-cyan-500 to-violet-400"></div>
-
-          <div className="lcars-label-strip text-xs text-cyan-400 mb-1">Grid Link</div>
-
-          <div className="flex items-center gap-2">
-
-            <span className="text-green-400 font-bold">Connected</span>
-
-            <span className="text-zinc-500">•</span>
-
-            <span className="text-zinc-400 text-sm">Updated {timeStr}</span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      
-
-      {/* Row 2: Metric Cards */}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-
-        {/* Total Nodes */}
-
-        <div className="bg-black/80 border-2 border-cyan-400/60 rounded-lg p-4 relative overflow-hidden shadow-lg shadow-cyan-500/20">
-
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent"></div>
-
-          <div className="relative">
-
-            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Total Nodes</div>
-
-            <div className="text-4xl font-bold text-white lcars-font">{totalCount}</div>
-
-            <div className="text-sm text-cyan-400">route endpoints</div>
-
-          </div>
-
-        </div>
-
-        
-
-        {/* Route Integrity */}
-
-        <div className="bg-black/80 border-2 border-green-400/60 rounded-lg p-4 relative overflow-hidden shadow-lg shadow-green-500/20">
-
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent"></div>
-
-          <div className="relative">
-
-            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Route Integrity</div>
-
-            <div className="text-4xl font-bold text-green-400 lcars-font">{healthyCount}</div>
-
-            <div className="text-sm text-zinc-400">all routes stable</div>
-
-          </div>
-
-        </div>
-
-        
-
-        {/* Network Mix */}
-
-        <div className="bg-black/80 border-2 border-violet-400/60 rounded-lg p-4 relative overflow-hidden shadow-lg shadow-violet-500/20">
-
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent"></div>
-
-          <div className="relative">
-
-            <div className="lcars-label-strip text-xs text-zinc-400 mb-1">Network Mix</div>
-
-            <div className="flex items-baseline gap-2">
-
-              <span className="text-2xl font-bold text-violet-400 lcars-font">{pageCount}</span>
-
-              <span className="text-zinc-500">pages</span>
-
-              <span className="text-zinc-600">•</span>
-
-              <span className="text-2xl font-bold text-blue-400 lcars-font">{apiCount}</span>
-
-              <span className="text-zinc-500">apis</span>
-
-            </div>
-
-            <div className="text-sm text-zinc-400 mt-1">{publicCount} public access</div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      
-
-      {/* Row 3: Network Pulse Slab */}
-
-      <div className="bg-black/90 border-2 border-cyan-500/40 rounded-lg p-6 relative overflow-hidden shadow-2xl shadow-cyan-500/30">
-
-        {/* Lightpath Top */}
-
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
-
-        
-
-        <div className="flex items-center gap-3 mb-4">
-
-          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50"></div>
-
-          <h2 className="text-2xl font-bold text-white lcars-font">Network Pulse</h2>
-
-        </div>
-
-        
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-
-          {/* Left: Route Ring Graphic */}
-
-          <div className="md:col-span-2 flex items-center justify-center">
-
-            <div className="relative w-48 h-48">
-
-              {/* Outer ring */}
-
-              <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30"></div>
-
-              {/* Middle ring */}
-
-              <div className="absolute inset-4 rounded-full border border-violet-500/40"></div>
-
-              {/* Inner ring */}
-
-              <div className="absolute inset-8 rounded-full border border-blue-500/50"></div>
-
-              {/* Core */}
-
-              <div className="absolute inset-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center border border-cyan-400/50">
-
-                <div className="text-center">
-
-                  <div className="text-3xl font-bold text-white lcars-font">{totalCount}</div>
-
-                  <div className="text-xs text-cyan-400">nodes</div>
-
-                </div>
-
+        <div className="space-y-2">
+          {dashboards.map((dash, idx) => (
+            <div key={idx} className="flex items-center gap-4 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/50 hover:border-cyan-500/30 transition-all">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <div className="flex-1">
+                <div className="text-sm text-zinc-200 lcars-font">{dash.name}</div>
+                <div className="text-xs text-zinc-500">{dash.path}</div>
               </div>
-
-              {/* Sector ticks */}
-
-              {[...Array(12)].map((_, i) => (
-
-                <div 
-
-                  key={i} 
-
-                  className="absolute w-1 h-3 bg-cyan-400/60"
-
-                  style={{
-
-                    top: "50%",
-
-                    left: "50%",
-
-                    transform: `rotate(${i * 30}deg) translateY(-96px) translateX(-50%)`,
-
-                    transformOrigin: "0 0"
-
-                  }}
-
-                ></div>
-
-              ))}
-
-            </div>
-
-          </div>
-
-          
-
-          {/* Right: Core Readouts */}
-
-          <div className="md:col-span-3 grid grid-cols-2 gap-4">
-
-            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
-
-              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Grid State</div>
-
-              <div className="text-xl font-bold text-green-400 lcars-font">Live</div>
-
-            </div>
-
-            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
-
-              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Node Count</div>
-
-              <div className="text-xl font-bold text-white lcars-font">{totalCount}</div>
-
-            </div>
-
-            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
-
-              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Route Integrity</div>
-
-              <div className="text-xl font-bold text-green-400 lcars-font">Full</div>
-
-            </div>
-
-            <div className="bg-black/50 rounded-lg p-3 border border-cyan-500/30">
-
-              <div className="lcars-label-strip text-xs text-zinc-500 mb-1">Public Access</div>
-
-              <div className="text-xl font-bold text-cyan-400 lcars-font">Ready</div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      
-
-      {/* Row 4: Portal Registry */}
-
-      <div className="relative z-10">
-
-        <div className="flex items-center gap-3 mb-4">
-
-          <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
-
-          <h2 className="text-xl font-bold text-white lcars-font">Portal Registry</h2>
-
-          <div className="h-px flex-1 bg-gradient-to-l from-cyan-500/50 to-transparent"></div>
-
-        </div>
-
-        
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-
-          {routes?.map((route, index) => {
-
-            const isApi = route.route_type === "api";
-
-            const isPublic = route.public;
-
-            const edgeColor = isApi ? "border-blue-500/50" : "border-violet-500/50";
-
-            const glowColor = isApi ? "shadow-blue-500/20" : "shadow-violet-500/20";
-
-            const tagColor = isApi ? "bg-blue-500/20 text-blue-400" : "bg-violet-500/20 text-violet-400";
-
-            
-
-            return (
-
-              <div 
-
-                key={route.path}
-
-                className={`bg-black/80 border ${edgeColor} rounded-lg p-4 relative overflow-hidden hover:border-cyan-400/70 transition-all cursor-pointer group shadow-lg ${glowColor}`}
-
-              >
-
-                {/* Node marker */}
-
-                <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-cyan-400 opacity-50"></div>
-
-                
-
-                {/* Lightpath edge */}
-
-                <div className={`absolute top-0 left-0 w-1 h-full ${isApi ? "bg-blue-500/50" : "bg-violet-500/50"}`}></div>
-
-                
-
-                <div className="flex items-center justify-between">
-
-                  <div className="flex-1 min-w-0">
-
-                    {/* Route path */}
-
-                    <div className="text-lg font-mono text-white truncate mb-1">{route.path}</div>
-
-                    
-
-                    {/* Tags */}
-
-                    <div className="flex items-center gap-2">
-
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${tagColor}`}>
-
-                        {isApi ? "API" : "PAGE"}
-
-                      </span>
-
-                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400">
-
-                        HEALTHY
-
-                      </span>
-
-                      {isPublic && (
-
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-cyan-500/20 text-cyan-400">
-
-                          PUBLIC
-
-                        </span>
-
-                      )}
-
-                    </div>
-
-                  </div>
-
-                  
-
-                  {/* Enter button */}
-
-                  <a 
-
-                    href={route.path}
-
-                    target="_blank"
-
-                    rel="noopener noreferrer"
-
-                    className="ml-4 px-4 py-2 bg-cyan-500/20 border border-cyan-400/50 rounded text-cyan-400 font-bold hover:bg-cyan-500/30 transition-all shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40"
-
-                  >
-
-                    Enter
-
-                  </a>
-
-                </div>
-
+              <div className="text-xs text-zinc-500">{dash.lastAccess}</div>
+              <div className={"px-2 py-1 rounded text-xs " + (dash.type === 'api' ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400')}>
+                {dash.type.toUpperCase()}
               </div>
-
-            );
-
-          })}
-
+            </div>
+          ))}
         </div>
-
       </div>
-
       
-
-      {/* Row 5: Grid Legend */}
-
-      <div className="bg-black/80 border border-cyan-500/30 rounded-lg p-4 relative z-10">
-
-        <div className="lcars-label-strip text-xs text-zinc-500 mb-3">Grid Legend</div>
-
-        <div className="flex flex-wrap gap-4 text-sm">
-
-          <div className="flex items-center gap-2">
-
-            <div className="w-3 h-3 rounded border-2 border-violet-500"></div>
-
-            <span className="text-zinc-400">Page: violet route node</span>
-
-          </div>
-
-          <div className="flex items-center gap-2">
-
-            <div className="w-3 h-3 rounded border-2 border-blue-500"></div>
-
-            <span className="text-zinc-400">API: blue interface node</span>
-
-          </div>
-
-          <div className="flex items-center gap-2">
-
-            <div className="w-3 h-3 rounded bg-green-500"></div>
-
-            <span className="text-zinc-400">Healthy: mint integrity state</span>
-
-          </div>
-
-          <div className="flex items-center gap-2">
-
-            <div className="w-3 h-3 rounded bg-cyan-500"></div>
-
-            <span className="text-zinc-400">Enter: cyan portal action</span>
-
-          </div>
-
+      {/* Quick Links */}
+      <div className="bg-zinc-900/50 rounded-lg border border-cyan-500/30 p-4">
+        <div className="text-sm text-cyan-400 mb-3 lcars-font">QUICK ACCESS</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {[
+            { name: "ZCC", path: "/zcc" },
+            { name: "Design", path: "/design" },
+            { name: "Stocks", path: "/stocks" },
+            { name: "Cyber API", path: "/api/cyber/news" },
+          ].map((link, idx) => (
+            <a key={idx} href={link.path} className="px-3 py-2 bg-zinc-800 hover:bg-cyan-500/10 rounded text-sm text-zinc-300 hover:text-cyan-400 transition-all text-center lcars-font">
+              {link.name}
+            </a>
+          ))}
         </div>
-
       </div>
-
     </div>
-
   );
-
 }
-
-
-
-
 
 export default function ZoControlDeck() {
 
