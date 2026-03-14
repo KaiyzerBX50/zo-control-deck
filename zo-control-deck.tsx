@@ -660,253 +660,326 @@ function CreditsTab({ credits, creditOverride, updateCreditOverride }: { credits
   );
 }
 function AgentsTab({ agents, loading }: { agents: AgentData[] | null; loading: boolean }) {
-  // NOSTROMO INDUSTRIAL TERMINAL
-  const [currentTime, setCurrentTime] = useState(new Date());
+  if (loading) return <div className="flex items-center justify-center h-64"><RefreshCw className="w-8 h-8 text-violet-400 animate-spin" /><span className="ml-3 text-lg text-violet-400">Scanning routines...</span></div>;
+  const activeCount = agents?.filter(a => a.active).length ?? 0;
+  const totalCount = agents?.length ?? 0;
   
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  
-  const totalRoutines = agents?.length ?? 0;
-  const liveRoutines = agents?.filter(a => a.active).length ?? 0;
-  const pausedRoutines = agents?.filter(a => !a.active).length ?? 0;
-  const queueCoverage = totalRoutines > 0 ? Math.round((liveRoutines / totalRoutines) * 100) : 0;
-  
-  // Model assignments
-  const modelCounts: Record<string, number> = { 'fast': 0, 'smart': 0, 'z-ai/glm-5': 0, 'other': 0 };
-  agents?.forEach(agent => {
-    const instruction = (agent.instruction || '').toLowerCase();
-    if (instruction.includes('fast')) modelCounts['fast']++;
-    else if (instruction.includes('smart')) modelCounts['smart']++;
-    else modelCounts['z-ai/glm-5']++;
-  });
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-amber-400 lcars-font text-lg">INITIALIZING ROUTINE CONSOLE</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      {/* ROW 1: HEADER */}
-      <div className="flex items-center justify-between border-b border-zinc-700 pb-3">
-        <div>
-          <h2 className="text-2xl font-bold lcars-font tracking-wider text-amber-500">AUTOMATION BAY</h2>
-          <p className="text-xs text-zinc-500 mt-1">Scheduled routines and model assignments across the ship queue</p>
-        </div>
-        <div className="flex items-center gap-2 bg-zinc-900 px-3 py-2 rounded border border-green-500/30">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-          <span className="text-xs text-green-400 font-bold">CONNECTED</span>
-        </div>
-      </div>
-
-      {/* ROW 2: ROUTINE DISPATCH CONSOLE */}
-      <div className="relative bg-zinc-900/80 rounded-lg border-2 border-zinc-700 overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-amber-600 via-zinc-600 to-amber-600"></div>
-        <div className="px-4 py-3 border-b border-zinc-700 bg-zinc-800/50">
-          <h3 className="text-lg font-bold lcars-font tracking-wider text-amber-400">ROUTINE DISPATCH CONSOLE</h3>
-        </div>
-        <div className="p-4">
-          <div className="grid grid-cols-12 gap-4">
-            {/* Activity Ring */}
-            <div className="col-span-3">
-              <div className="relative w-full aspect-square max-w-32 mx-auto">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="45" stroke="#3f3f46" strokeWidth="8" fill="none" />
-                  <circle cx="50" cy="50" r="45" stroke="#22c55e" strokeWidth="8" fill="none"
-                    strokeDasharray={`${(liveRoutines / Math.max(totalRoutines, 1)) * 283} 283`} />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-3xl font-bold lcars-font text-green-400">{liveRoutines}</div>
-                  <div className="text-xs text-zinc-500">LIVE</div>
-                </div>
-              </div>
-            </div>
-            {/* State Matrix + Dispatch Rail */}
-            <div className="col-span-6 space-y-3">
-              <div className="bg-zinc-800/50 rounded border border-zinc-700 p-3">
-                <div className="text-xs text-zinc-500 lcars-font mb-2">ROUTINE STATE MATRIX</div>
-                <div className="grid grid-cols-6 gap-1">
-                  {[
-                    { label: 'LIVE', count: liveRoutines, color: 'bg-green-500', textColor: 'text-green-400' },
-                    { label: 'PAUSED', count: pausedRoutines, color: 'bg-zinc-500', textColor: 'text-zinc-400' },
-                    { label: 'QUEUED', count: 0, color: 'bg-amber-500', textColor: 'text-amber-400' },
-                    { label: 'IDLE', count: 0, color: 'bg-zinc-600', textColor: 'text-zinc-500' },
-                    { label: 'BLOCKED', count: 0, color: 'bg-red-500', textColor: 'text-red-400' },
-                    { label: 'FAILED', count: 0, color: 'bg-red-600', textColor: 'text-red-400' }
-                  ].map((state) => (
-                    <div key={state.label} className="text-center">
-                      <div className={`h-8 ${state.color} rounded-sm flex items-center justify-center mb-1`}>
-                        <span className="text-sm font-bold text-black">{state.count}</span>
-                      </div>
-                      <div className={`text-xs lcars-font ${state.textColor}`}>{state.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-zinc-800/50 rounded border border-zinc-700 p-3">
-                <div className="text-xs text-zinc-500 lcars-font mb-2">DISPATCH RAIL</div>
-                <div className="flex h-6 rounded-sm overflow-hidden border border-zinc-600">
-                  <div className="bg-green-500 flex items-center justify-center"
-                    style={{ width: `${totalRoutines > 0 ? (liveRoutines / totalRoutines) * 100 : 0}%` }}>
-                    {liveRoutines > 0 && <span className="text-xs text-black font-bold">{liveRoutines}</span>}
-                  </div>
-                  <div className="bg-zinc-500 flex items-center justify-center"
-                    style={{ width: `${totalRoutines > 0 ? (pausedRoutines / totalRoutines) * 100 : 0}%` }}>
-                    {pausedRoutines > 0 && <span className="text-xs text-black font-bold">{pausedRoutines}</span>}
-                  </div>
-                  <div className="flex-1 bg-zinc-700"></div>
-                </div>
-                <div className="flex justify-between mt-2 text-xs text-zinc-600">
-                  <span>ACTIVE</span><span>PAUSED</span><span>QUEUED</span><span>BLOCKED</span>
-                </div>
-              </div>
-            </div>
-            {/* Queue State + Legend */}
-            <div className="col-span-3 space-y-3">
-              <div className="bg-zinc-800/50 rounded border border-zinc-700 p-2">
-                <div className="text-xs text-zinc-500 lcars-font mb-2">QUEUE STATE</div>
-                <div className="grid grid-cols-2 gap-1 text-xs">
-                  <div className="bg-zinc-700 rounded p-1 text-center">
-                    <div className="text-green-400 font-bold">{liveRoutines}</div>
-                    <div className="text-zinc-500">ACTIVE</div>
-                  </div>
-                  <div className="bg-zinc-700 rounded p-1 text-center">
-                    <div className="text-zinc-400 font-bold">{pausedRoutines}</div>
-                    <div className="text-zinc-500">PAUSED</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <div className="space-y-6">
+      <LCARSPanel title="Automation Status" color="violet">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-zinc-900/50 rounded-lg p-4 border border-violet-500/40">
+            <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Active Routines</div>
+            <div className="text-2xl font-bold text-violet-400" style={{ fontFamily: "'Orbitron', monospace" }}>{activeCount}</div>
+          </div>
+          <div className="bg-zinc-900/50 rounded-lg p-4 border border-amber-500/40">
+            <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Total Agents</div>
+            <div className="text-2xl font-bold text-amber-400" style={{ fontFamily: "'Orbitron', monospace" }}>{totalCount}</div>
+          </div>
+          <div className="bg-zinc-900/50 rounded-lg p-4 border border-cyan-500/40">
+            <div className="text-xs text-zinc-400 mb-1 tracking-wider" style={{ fontFamily: "'Orbitron', monospace" }}>Coverage</div>
+            <div className="text-2xl font-bold text-cyan-400" style={{ fontFamily: "'Orbitron', monospace" }}>{totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0}%</div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-zinc-600 via-amber-600 to-zinc-600"></div>
-      </div>
-
-      {/* ROW 3: QUEUE METRICS */}
-      <div className="grid grid-cols-4 gap-3">
-        <div className="bg-zinc-900/80 rounded border border-zinc-700 p-3">
-          <div className="text-xs text-zinc-500 lcars-font">TOTAL ROUTINES</div>
-          <div className="text-3xl font-bold lcars-font text-amber-400">{totalRoutines}</div>
-        </div>
-        <div className="bg-zinc-900/80 rounded border border-green-500/30 p-3">
-          <div className="text-xs text-zinc-500 lcars-font">LIVE ROUTINES</div>
-          <div className="text-3xl font-bold lcars-font text-green-400">{liveRoutines}</div>
-        </div>
-        <div className="bg-zinc-900/80 rounded border border-zinc-700 p-3">
-          <div className="text-xs text-zinc-500 lcars-font">QUEUE COVERAGE</div>
-          <div className="text-3xl font-bold lcars-font text-amber-400">{queueCoverage}%</div>
-        </div>
-        <div className="bg-zinc-900/80 rounded border border-zinc-700 p-3">
-          <div className="text-xs text-zinc-500 lcars-font">DISPATCH WINDOWS</div>
-          <div className="text-sm font-bold text-zinc-300">0 now</div>
-          <div className="text-xs text-zinc-600">{totalRoutines} unscheduled</div>
-        </div>
-      </div>
-
-      {/* ROW 4: MODEL ASSIGNMENT RACK */}
-      <div className="bg-zinc-900/80 rounded border border-zinc-700 overflow-hidden">
-        <div className="px-4 py-2 border-b border-zinc-700 bg-zinc-800/30">
-          <h3 className="text-lg font-bold lcars-font tracking-wider text-amber-400">MODEL ASSIGNMENT RACK</h3>
-        </div>
-        <div className="p-3">
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { model: 'fast', count: modelCounts['fast'], color: 'border-cyan-500', textColor: 'text-cyan-400' },
-              { model: 'smart', count: modelCounts['smart'], color: 'border-violet-500', textColor: 'text-violet-400' },
-              { model: 'z-ai/glm-5', count: modelCounts['z-ai/glm-5'], color: 'border-amber-500', textColor: 'text-amber-400' },
-              { model: 'other', count: modelCounts['other'], color: 'border-zinc-500', textColor: 'text-zinc-400' }
-            ].map((rack) => (
-              <div key={rack.model} className={`bg-zinc-800 rounded border ${rack.color} p-3`}>
-                <div className="text-xs text-zinc-500 lcars-font">{rack.model.toUpperCase()}</div>
-                <div className={`text-2xl font-bold lcars-font ${rack.textColor}`}>{rack.count}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 5: SHIP ROUTINES */}
-      <div className="bg-zinc-900/80 rounded border border-zinc-700 overflow-hidden">
-        <div className="px-4 py-2 border-b border-zinc-700 bg-zinc-800/30">
-          <h3 className="text-lg font-bold lcars-font tracking-wider text-amber-400">SHIP ROUTINES</h3>
-        </div>
-        <div className="divide-y divide-zinc-800">
-          {agents?.map((agent, index) => {
-            let model = 'z-ai/glm-5';
-            const instruction = (agent.instruction || '').toLowerCase();
-            if (instruction.includes('fast')) model = 'fast';
-            else if (instruction.includes('smart')) model = 'smart';
-            
-            return (
-              <div key={agent.id} className="flex items-center gap-3 p-3 hover:bg-zinc-800/50">
-                <div className="w-16">
-                  <div className="text-xs lcars-font text-zinc-500">LANE</div>
-                  <div className="text-lg font-bold lcars-font text-amber-400">[{(index + 1).toString().padStart(2, '0')}]</div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className={`w-4 h-4 rounded-full ${agent.active ? 'bg-green-400 animate-pulse' : 'bg-zinc-500'}`}></div>
-                  <div className={`text-xs mt-1 ${agent.active ? 'text-green-400' : 'text-zinc-500'}`}>
-                    {agent.active ? 'LIVE' : 'PAUSED'}
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-zinc-200 font-medium truncate">
-                    {(agent.instruction || 'Unnamed').slice(0, 50)}...
-                  </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500">
-                    <span className="uppercase">{model}</span>
-                    <span className="text-zinc-600">|</span>
-                    <span>Next: {agent.next_run ? new Date(agent.next_run).toLocaleString() : 'No schedule'}</span>
-                  </div>
-                </div>
-                <div className={`px-2 py-1 rounded text-xs font-bold ${
-                  model === 'fast' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
-                  model === 'smart' ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' :
-                  'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                }`}>
-                  {model.toUpperCase()}
+      </LCARSPanel>
+      <LCARSPanel title="Agent Registry" color="violet">
+        <div className="space-y-2">
+          {(agents || []).map((agent) => (
+            <div key={agent.id} className="flex items-center gap-4 p-3 bg-zinc-900/50 rounded-lg border border-zinc-700/50 hover:border-violet-500/50 transition-all">
+              <div className={"w-3 h-3 rounded-full " + (agent.active ? "bg-green-400 shadow-lg shadow-green-400/50" : "bg-zinc-500")}></div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-zinc-200 truncate">{(agent.instruction || "No instruction").slice(0, 60)}...</div>
+                <div className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className={agent.active ? "text-green-400" : "text-zinc-500"}>{agent.active ? "ACTIVE" : "INACTIVE"}</span>
+                  <span className="text-zinc-600">|</span>
+                  <span>{agent.delivery_method || "none"}</span>
                 </div>
               </div>
-            );
-          })}
-          {(!agents || agents.length === 0) && (
-            <div className="p-8 text-center text-zinc-500">
-              <div className="text-lg lcars-font">NO ROUTINES REGISTERED</div>
+              <ChevronRight className="w-4 h-4 text-zinc-600" />
             </div>
-          )}
+          ))}
         </div>
-      </div>
-
-      {/* BOTTOM: QUEUE DIAGNOSTICS */}
-      <div className="bg-zinc-900/90 rounded border border-zinc-700 p-3">
-        <div className="text-xs text-zinc-500 lcars-font mb-2">QUEUE DIAGNOSTICS</div>
-        <div className="grid grid-cols-5 gap-4 text-xs">
-          <div><span className="text-zinc-400">Queue Health:</span> <span className="text-green-400">STABLE</span></div>
-          <div><span className="text-zinc-400">Stalled:</span> <span className="text-zinc-300">0</span></div>
-          <div><span className="text-zinc-400">Failed:</span> <span className="text-zinc-300">0</span></div>
-          <div><span className="text-zinc-400">Manual:</span> <span className="text-zinc-300">0</span></div>
-          <div><span className="text-zinc-400">Last Sync:</span> <span className="text-amber-400">{currentTime.toLocaleTimeString()}</span></div>
-        </div>
-      </div>
+      </LCARSPanel>
     </div>
   );
 }
-
 
 function SecurityTab() {
   return <div className="space-y-6"><LCARSPanel title="Security Status" color="rose"><div className="flex items-center justify-center h-40"><div className="text-center"><Shield className="w-12 h-12 text-rose-400 mx-auto mb-3" /><div className="text-lg text-zinc-400">Security monitoring requires API configuration</div></div></div></LCARSPanel></div>;
 }
 
 function FailuresTab() {
-  return <div className="space-y-6"><LCARSPanel title="Failure Tracking" color="rose"><div className="flex items-center justify-center h-40"><div className="text-center"><AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-3" /><div className="text-lg text-zinc-400">Failure analysis requires API configuration</div></div></div></LCARSPanel></div>;
+  // Alert state data (would come from API in production)
+  const totalIncidents = 0;
+  const criticalThreats = 0;
+  const priorityThreats = 0;
+  const minorAlerts = 0;
+  
+  const currentTime = new Date().toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit',
+    hour12: true 
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Row 1: Tactical Alert + Command Link */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Tactical Alert */}
+        <div className="bg-zinc-900 rounded-lg border-2 border-red-500/60 overflow-hidden shadow-lg shadow-red-500/20">
+          <div className="h-2 bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
+          <div className="p-4 border-b border-red-500/30">
+            <h3 className="text-2xl font-bold text-red-400 tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+              TACTICAL ALERT
+            </h3>
+          </div>
+          <div className="p-4 text-sm text-zinc-400">
+            Incident severity, triage state, and command attention.
+          </div>
+        </div>
+        
+        {/* Command Link */}
+        <div className="bg-zinc-900 rounded-lg border-2 border-red-500/40 overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-red-500 via-amber-500 to-red-500"></div>
+          <div className="p-4 border-b border-red-500/30">
+            <h3 className="text-2xl font-bold text-amber-400 tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+              COMMAND LINK
+            </h3>
+          </div>
+          <div className="p-4 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-400 shadow-green-400/50 shadow-lg animate-pulse"></div>
+              <span className="text-green-400 font-bold">CONNECTED</span>
+            </div>
+            <span className="text-sm text-zinc-500">Updated {currentTime}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: Threat Counters */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-zinc-900/80 rounded-lg border border-red-500/50 p-4">
+          <div className="text-xs text-zinc-400 uppercase tracking-wider mb-2" style={{ fontFamily: 'Orbitron, monospace' }}>Total Incidents</div>
+          <div className="text-4xl font-bold text-white" style={{ fontFamily: 'Orbitron, monospace' }}>{totalIncidents}</div>
+        </div>
+        <div className="bg-zinc-900/80 rounded-lg border border-red-400/50 p-4">
+          <div className="text-xs text-zinc-400 uppercase tracking-wider mb-2" style={{ fontFamily: 'Orbitron, monospace' }}>Critical Threats</div>
+          <div className="text-4xl font-bold text-red-400" style={{ fontFamily: 'Orbitron, monospace' }}>{criticalThreats}</div>
+        </div>
+        <div className="bg-zinc-900/80 rounded-lg border border-amber-500/50 p-4">
+          <div className="text-xs text-zinc-400 uppercase tracking-wider mb-2" style={{ fontFamily: 'Orbitron, monospace' }}>Priority Threats</div>
+          <div className="text-4xl font-bold text-amber-400" style={{ fontFamily: 'Orbitron, monospace' }}>{priorityThreats}</div>
+        </div>
+        <div className="bg-zinc-900/80 rounded-lg border border-amber-400/50 p-4">
+          <div className="text-xs text-zinc-400 uppercase tracking-wider mb-2" style={{ fontFamily: 'Orbitron, monospace' }}>Minor Alerts</div>
+          <div className="text-4xl font-bold text-amber-300" style={{ fontFamily: 'Orbitron, monospace' }}>{minorAlerts}</div>
+        </div>
+      </div>
+
+      {/* Row 3: Red Alert Board + Side Stack */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Red Alert Board */}
+        <div className="lg:col-span-2 bg-zinc-900 rounded-lg border-2 border-red-500/70 overflow-hidden shadow-xl shadow-red-500/30">
+          <div className="h-2 bg-gradient-to-r from-red-600 via-rose-500 to-red-600"></div>
+          <div className="p-4 border-b border-red-500/40 bg-gradient-to-r from-red-500/10 to-transparent">
+            <h3 className="text-2xl font-bold text-red-400 tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+              RED ALERT BOARD
+            </h3>
+            <p className="text-xs text-zinc-500 mt-1">Primary tactical readout for incidents, failure posture, and damage control</p>
+          </div>
+          
+          <div className="p-6">
+            {/* Alert Beacon - Large circular graphic */}
+            <div className="relative w-48 h-48 mx-auto mb-6">
+              {/* Outer rings */}
+              <div className="absolute inset-0 rounded-full border-4 border-red-500/30 animate-pulse"></div>
+              <div className="absolute inset-4 rounded-full border-2 border-red-500/40"></div>
+              <div className="absolute inset-8 rounded-full border-2 border-red-500/50"></div>
+              <div className="absolute inset-12 rounded-full border border-red-500/60"></div>
+              
+              {/* Core */}
+              <div className="absolute inset-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/50 flex items-center justify-center">
+                <span className="text-white font-bold text-sm" style={{ fontFamily: 'Orbitron, monospace' }}>ARMED</span>
+              </div>
+              
+              {/* Sector ticks */}
+              {[...Array(12)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="absolute w-1 h-3 bg-red-500/60"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    transform: `rotate(${i * 30}deg) translateY(-96px)`,
+                    transformOrigin: '0 0'
+                  }}
+                ></div>
+              ))}
+              
+              {/* Warning brackets */}
+              <div className="absolute -top-2 -left-2 w-6 h-6 border-l-4 border-t-4 border-red-500"></div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 border-r-4 border-t-4 border-red-500"></div>
+              <div className="absolute -bottom-2 -left-2 w-6 h-6 border-l-4 border-b-4 border-red-500"></div>
+              <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-4 border-b-4 border-red-500"></div>
+            </div>
+            
+            {/* Status Readouts */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-zinc-800/50 rounded p-3 border border-red-500/30">
+                <div className="text-xs text-zinc-400 uppercase">Alert State</div>
+                <div className="text-xl font-bold text-red-400" style={{ fontFamily: 'Orbitron, monospace' }}>ARMED</div>
+              </div>
+              <div className="bg-zinc-800/50 rounded p-3 border border-red-500/30">
+                <div className="text-xs text-zinc-400 uppercase">Queue State</div>
+                <div className="text-xl font-bold text-green-400" style={{ fontFamily: 'Orbitron, monospace' }}>CLEAR</div>
+              </div>
+              <div className="bg-zinc-800/50 rounded p-3 border border-red-500/30">
+                <div className="text-xs text-zinc-400 uppercase">Damage Control</div>
+                <div className="text-xl font-bold text-amber-400" style={{ fontFamily: 'Orbitron, monospace' }}>STANDING BY</div>
+              </div>
+              <div className="bg-zinc-800/50 rounded p-3 border border-red-500/30">
+                <div className="text-xs text-zinc-400 uppercase">Command Attention</div>
+                <div className="text-xl font-bold text-cyan-400" style={{ fontFamily: 'Orbitron, monospace' }}>NONE REQUIRED</div>
+              </div>
+            </div>
+
+            {/* Response State */}
+            <div className="bg-zinc-800/30 rounded-lg p-4 border border-red-500/20">
+              <div className="text-xs text-zinc-500 uppercase mb-3">Response State</div>
+              <div className="grid grid-cols-4 gap-3">
+                {['Command', 'Triage', 'Dispatch', 'Recovery'].map((name) => (
+                  <div key={name} className="text-center">
+                    <div className="text-xs text-zinc-400 mb-1">{name}</div>
+                    <div className="text-sm font-bold text-green-400" style={{ fontFamily: 'Orbitron, monospace' }}>READY</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Side Stack: Severity Rails + Threat Sector Map */}
+        <div className="space-y-6">
+          {/* Severity Rails */}
+          <div className="bg-zinc-900 rounded-lg border border-red-500/50 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-red-600 to-red-500"></div>
+            <div className="p-4 border-b border-red-500/30">
+              <h3 className="text-lg font-bold text-red-400" style={{ fontFamily: 'Orbitron, monospace' }}>SEVERITY RAILS</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              {[
+                { label: 'Critical', color: 'red', value: 0 },
+                { label: 'High', color: 'amber', value: 0 },
+                { label: 'Medium', color: 'yellow', value: 0 },
+                { label: 'Low', color: 'zinc', value: 0 }
+              ].map((sev) => (
+                <div key={sev.label} className="flex items-center gap-3">
+                  <div className="w-2 h-12 rounded-full bg-red-500/30 animate-pulse"></div>
+                  <div className="flex-1">
+                    <div className="text-xs text-zinc-400 uppercase">{sev.label}</div>
+                    <div className={`text-xl font-bold text-${sev.color}-400`} style={{ fontFamily: 'Orbitron, monospace' }}>{sev.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Threat Sector Map */}
+          <div className="bg-zinc-900 rounded-lg border border-red-500/50 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-red-500 to-amber-500"></div>
+            <div className="p-4 border-b border-red-500/30">
+              <h3 className="text-lg font-bold text-amber-400" style={{ fontFamily: 'Orbitron, monospace' }}>THREAT SECTOR MAP</h3>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {['Forward', 'Port', 'Starboard', 'Aft', 'Core', 'External'].map((sector) => (
+                  <div key={sector} className="bg-zinc-800/50 rounded border border-red-500/30 p-2">
+                    <div className="text-xs text-zinc-500 uppercase">{sector}</div>
+                    <div className="text-xs font-bold text-green-400" style={{ fontFamily: 'Orbitron, monospace' }}>CLEAR</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 4: Damage Control Queue + Alert Timeline + Failure Class Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Damage Control Queue */}
+        <div className="lg:col-span-2 bg-zinc-900 rounded-lg border-2 border-red-500/50 overflow-hidden relative">
+          {/* Diagonal warning corners */}
+          <div className="absolute top-0 left-0 w-16 h-16 overflow-hidden">
+            <div className="absolute -top-8 -left-8 w-24 h-24 bg-red-500/30 transform rotate-45"></div>
+          </div>
+          <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-24 h-24 bg-red-500/30 transform rotate-45"></div>
+          </div>
+          
+          <div className="h-2 bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
+          <div className="p-4 border-b border-red-500/30">
+            <h3 className="text-xl font-bold text-red-400 tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+              DAMAGE CONTROL QUEUE
+            </h3>
+            <p className="text-xs text-zinc-500 mt-1">Security and system failures sorted by urgency</p>
+          </div>
+          
+          <div className="p-8 flex flex-col items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-red-500/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-red-500/20 animate-pulse"></div>
+              </div>
+              <h4 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'Orbitron, monospace' }}>
+                No active incidents in queue
+              </h4>
+              <p className="text-sm text-zinc-400 max-w-md">
+                Damage control remains on standby. New faults, outages, and priority failures will appear here when detected.
+              </p>
+              <div className="mt-4 text-xs text-red-400 uppercase tracking-wider" style={{ fontFamily: 'Orbitron, monospace' }}>
+                Alert channels armed
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Alert Timeline + Failure Class Grid */}
+        <div className="space-y-6">
+          {/* Alert Timeline */}
+          <div className="bg-zinc-900 rounded-lg border border-red-500/40 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-red-500 to-amber-500"></div>
+            <div className="p-4 border-b border-red-500/30">
+              <h3 className="text-lg font-bold text-amber-400" style={{ fontFamily: 'Orbitron, monospace' }}>ALERT TIMELINE</h3>
+            </div>
+            <div className="p-4 space-y-2">
+              {['Now', '5m', '15m', '1h', '24h'].map((time) => (
+                <div key={time} className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-400">{time}</span>
+                  <span className="text-green-400 font-bold" style={{ fontFamily: 'Orbitron, monospace' }}>Quiet</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Failure Class Grid */}
+          <div className="bg-zinc-900 rounded-lg border border-red-500/40 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-amber-500 to-red-500"></div>
+            <div className="p-4 border-b border-red-500/30">
+              <h3 className="text-lg font-bold text-amber-400" style={{ fontFamily: 'Orbitron, monospace' }}>FAILURE CLASS GRID</h3>
+            </div>
+            <div className="p-4 grid grid-cols-3 gap-2 text-center">
+              {['Service', 'Auth', 'Network', 'Storage', 'Compute', 'Unknown'].map((cls) => (
+                <div key={cls} className="bg-zinc-800/50 rounded p-2 border border-red-500/20">
+                  <div className="text-xs text-zinc-400 uppercase">{cls}</div>
+                  <div className="text-sm font-bold text-zinc-300" style={{ fontFamily: 'Orbitron, monospace' }}>0</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function ZoControlDeck() {
