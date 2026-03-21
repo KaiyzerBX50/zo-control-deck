@@ -1086,12 +1086,12 @@ function FailuresTab() {
 
 function DashboardsTab() {
   const quickAccessItems = [
-    { name: "Projects", icon: "📁", description: "Workspace projects" },
-    { name: "Tools", icon: "🔧", description: "System tools" },
-    { name: "Settings", icon: "⚙️", description: "Configuration" },
-    { name: "Terminal", icon: "💻", description: "Command line" },
-    { name: "Browser", icon: "🌐", description: "Web browser" },
-    { name: "Datasets", icon: "📊", description: "Data collections" },
+    { name: "Projects", icon: "📁", description: "Workspace projects", link: "/?t=search&q=Projects" },
+    { name: "Tools", icon: "🔧", description: "System tools", link: "/?t=settings" },
+    { name: "Settings", icon: "⚙️", description: "Configuration", link: "/?t=settings" },
+    { name: "Terminal", icon: "💻", description: "Command line", link: "/?t=terminal" },
+    { name: "Browser", icon: "🌐", description: "Web browser", link: "/browser" },
+    { name: "Datasets", icon: "📊", description: "Data collections", link: "/?t=datasets" },
   ];
 
   const allSpaces = [
@@ -1137,11 +1137,11 @@ function DashboardsTab() {
       <LCARSPanel title="QUICK ACCESS" color="green">
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
           {quickAccessItems.map((item, idx) => (
-            <button key={idx} className="bg-zinc-900/50 rounded-lg p-4 border border-green-500/30 hover:border-green-400 hover:bg-zinc-800/50 transition-all text-center">
+            <a key={idx} href={item.link} className="bg-zinc-900/50 rounded-lg p-4 border border-green-500/30 hover:border-green-400 hover:bg-zinc-800/50 transition-all text-center block">
               <div className="text-2xl mb-2">{item.icon}</div>
               <div className="text-sm text-zinc-200 font-medium">{item.name}</div>
               <div className="text-xs text-zinc-500 mt-1">{item.description}</div>
-            </button>
+            </a>
           ))}
         </div>
       </LCARSPanel>

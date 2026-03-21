@@ -1,0 +1,74 @@
+{
+  "name": "zo-control-deck",
+  "version": "1.0.0",
+  "page_routes": [
+    {
+      "path": "/dashboard",
+      "visibility": "private",
+      "template": "templates/dashboard.page.tsx",
+      "required": true
+    }
+  ],
+  "api_routes": [
+    {
+      "path": "/api/system-stats",
+      "template": "templates/apis/system-stats.api.ts",
+      "required": true,
+      "data_source": "real"
+    },
+    {
+      "path": "/api/services",
+      "template": "templates/apis/services.api.ts",
+      "required": true,
+      "data_source": "real"
+    },
+    {
+      "path": "/api/agents",
+      "template": "templates/apis/agents.api.ts",
+      "required": true,
+      "data_source": "real"
+    },
+    {
+      "path": "/api/credits",
+      "template": "templates/apis/credits.api.ts",
+      "required": true,
+      "data_source": "real_or_local_file"
+    },
+    {
+      "path": "/api/dashboards",
+      "template": "templates/apis/dashboards.api.ts",
+      "required": true,
+      "data_source": "real"
+    },
+    {
+      "path": "/api/logs",
+      "template": "templates/apis/logs.api.ts",
+      "required": true,
+      "data_source": "real"
+    },
+    {
+      "path": "/api/metrics-history",
+      "template": "templates/apis/metrics-history.api.ts",
+      "required": true,
+      "data_source": "simulated_historical"
+    },
+    {
+      "path": "/api/audit",
+      "template": "templates/apis/audit.api.ts",
+      "required": true,
+      "data_source": "simulated"
+    },
+    {
+      "path": "/api/security-failures",
+      "template": "templates/apis/security-failures.api.ts",
+      "required": true,
+      "data_source": "simulated"
+    },
+    {
+      "path": "/api/status",
+      "template": "templates/apis/status.api.ts",
+      "required": true,
+      "data_source": "meta"
+    }
+  ]
+}
