@@ -1,0 +1,12 @@
+{
+  "routes": [
+    { "path": "/zo-control-deck", "type": "page", "file": "routes/pages/zo-control-deck.tsx", "public": false },
+    { "path": "/api/system-stats", "type": "api", "file": "routes/api/system-stats.ts", "public": true },
+    { "path": "/api/services", "type": "api", "file": "routes/api/services.ts", "public": true },
+    { "path": "/api/agents", "type": "api", "file": "routes/api/agents.ts", "public": true },
+    { "path": "/api/credits", "type": "api", "file": "routes/api/credits.ts", "public": true },
+    { "path": "/api/sites", "type": "api", "file": "routes/api/sites.ts", "public": true },
+    { "path": "/api/audit", "type": "api", "file": "routes/api/audit.ts", "public": true },
+    { "path": "/api/billing", "type": "api", "file": "routes/api/billing.ts", "public": true }
+  ]
+}
