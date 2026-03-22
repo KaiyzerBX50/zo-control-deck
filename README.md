@@ -4,6 +4,8 @@ A multi-tab operations dashboard for [Zo Computer](https://zocomputer.com) with 
 
 ![Star Trek LCARS](https://img.shields.io/badge/Overview-LCARS-F59E0B?style=flat-square) ![Star Wars](https://img.shields.io/badge/Services-Targeting_Computer-DC2626?style=flat-square) ![Alien](https://img.shields.io/badge/Agents-Nostromo-22C55E?style=flat-square) ![Blade Runner](https://img.shields.io/badge/Credits-Neon_Finance-EC4899?style=flat-square) ![TRON](https://img.shields.io/badge/Dashboards-TRON_Grid-22D3EE?style=flat-square) ![HAL 9000](https://img.shields.io/badge/Security-HAL_9000-DC2626?style=flat-square) ![Matrix](https://img.shields.io/badge/Logs-Matrix_Terminal-22C55E?style=flat-square) ![Red Alert](https://img.shields.io/badge/Failures-Red_Alert-DC2626?style=flat-square)
 
+![Zo Control Deck Dashboard](screenshots/dashboard.png)
+
 ## Tabs
 
 | Tab | Theme | Data Source |
