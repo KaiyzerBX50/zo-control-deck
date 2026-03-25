@@ -1,27 +1,34 @@
 import type { Context } from "hono";
 
+// Returns agents from the Zo Computer API
+// Install this skill to see YOUR actual agents
 export default async (c: Context) => {
-  const agents = [
-    {
-      id: "d35c6bd8-d712-412f-a4a0-6ba212e9808f",
-      name: "Generate DLP and DSPM Report",
-      active: false,
-      status: "inactive",
-      schedule: "Daily at 11:00 AM",
-      last_run: null,
-      delivery_method: "sms",
-    },
-  ];
-
-  return c.json({
-    agents,
-    stats: {
+  try {
+    const response = await fetch("https://api.zo.computer/v1/agents/list", {
+      headers: {
+        "Authorization": `Bearer ${process.env.ZO_CLIENT_IDENTITY_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const agents = Array.isArray(data) ? data : data.agents || [];
+    
+    return c.json({ 
+      agents,
       total: agents.length,
-      active: agents.filter((a) => a.active).length,
-      inactive: agents.filter((a) => !a.active).length,
-    },
-    data_source: "STATIC",
-    note: "Agent data is cached. For live updates, use the Zo app's Agents page.",
-    last_updated: new Date().toISOString(),
-  });
+      active: agents.filter((a: any) => a.active).length
+    });
+  } catch (error) {
+    return c.json({ 
+      error: "Failed to fetch agents",
+      agents: [],
+      total: 0,
+      active: 0
+    }, 500);
+  }
 };
