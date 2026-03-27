@@ -1663,7 +1663,7 @@ function DashboardsTab({ routes }: { routes: SpaceRoute[] }) {
                     </div>
                     {/* Enter button */}
                     <button
-                      onClick={() => window.open(`https://dagawdnyc.zo.space${route.path}`, "_blank")}
+                      onClick={() => window.open(`${route.path}`, "_blank")}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-bold tracking-wider cursor-pointer transition-all hover:brightness-125 shrink-0 ml-3"
                       style={{ fontFamily: "Orbitron, monospace", background: "rgba(34, 211, 238, 0.08)", border: "1px solid rgba(34, 211, 238, 0.35)", color: "rgb(34, 211, 238)", boxShadow: "0 0 8px rgba(34, 211, 238, 0.1)" }}
                     >ENTER</button>
@@ -2098,12 +2098,12 @@ function LogsTab({ realLogs }: { realLogs?: any[] }) {
     }
     const defaultLines = [
       { time: "06:13:32", level: "INFO", source: "supervisord", message: "started with pid 120", pid: "120" },
-      { time: "06:13:33", level: "INFO", source: "supervisord", message: "spawned: astranode-v2 with pid 126", pid: "126" },
+      { time: "06:13:33", level: "INFO", source: "supervisord", message: "spawned: my-service with pid 126", pid: "126" },
       { time: "06:13:33", level: "INFO", source: "supervisord", message: "spawned: frpc-frp-standard-2 with pid 127", pid: "127" },
       { time: "06:13:33", level: "INFO", source: "supervisord", message: "spawned: project-russel-site with pid 128", pid: "128" },
       { time: "06:13:34", level: "INFO", source: "supervisord", message: "spawned: stickiezo with pid 131", pid: "131" },
       { time: "06:13:34", level: "INFO", source: "supervisord", message: "spawned: stocksdashboard2 with pid 139", pid: "139" },
-      { time: "06:13:38", level: "INFO", source: "supervisord", message: "success: astranode-v2 entered RUNNING state", pid: "126" },
+      { time: "06:13:38", level: "INFO", source: "supervisord", message: "success: my-service entered RUNNING state", pid: "126" },
       { time: "06:13:38", level: "INFO", source: "supervisord", message: "success: frpc-frp-standard-2 entered RUNNING state", pid: "127" },
       { time: "06:13:39", level: "INFO", source: "supervisord", message: "success: project-russel-site entered RUNNING state", pid: "128" },
       { time: "06:13:39", level: "INFO", source: "supervisord", message: "success: stickiezo entered RUNNING state", pid: "131" },

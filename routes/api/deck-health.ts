@@ -14,13 +14,15 @@ async function ping(port: number, ms = 3000): Promise<{ ok: boolean; lat: number
   }
 }
 
-const SVCS = [
-  { label: "astranode-v2", port: 55353, url: "https://astranode-v2-dagawdnyc.zocomputer.io" },
-];
-
 export default async (c: Context) => {
+  let registeredServices: Array<{ label: string; port: number; http_url?: string }> = [];
+  try {
+    const res = await fetch("http://localhost:41193/api/services");
+    if (res.ok) registeredServices = await res.json();
+  } catch {}
+
   const results = await Promise.all(
-    SVCS.map(async (s) => {
+    registeredServices.map(async (s) => {
       const h = await ping(s.port);
       return {
         name: s.label,
@@ -28,7 +30,7 @@ export default async (c: Context) => {
         status: h.ok ? "Operational" as const : "Outage" as const,
         details: h.ok ? `${h.lat}ms latency` : "Service unreachable",
         port: s.port,
-        url: s.url,
+        url: s.http_url || "",
       };
     })
   );
@@ -39,7 +41,7 @@ export default async (c: Context) => {
     status: "Operational",
     details: "Serving this page",
     port: 3099,
-    url: "https://dagawdnyc.zo.space",
+    url: "",
   });
 
   let bootTime = "Unknown";
