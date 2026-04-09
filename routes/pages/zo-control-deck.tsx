@@ -2850,105 +2850,118 @@ function TabBackground({ tab }: { tab: string }) {
   useEffect(() => { const t = setInterval(() => setTick(v => v + 1), 60); return () => clearInterval(t); }, []);
 
   if (tab === "overview") {
-    // Star Trek: Warp starfield
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {Array.from({ length: 80 }).map((_, i) => {
-          const x = ((i * 37 + tick * (0.3 + (i % 5) * 0.15)) % 110) - 5;
+        {Array.from({ length: 100 }).map((_, i) => {
+          const x = ((i * 37 + tick * (0.5 + (i % 5) * 0.25)) % 115) - 5;
           const y = ((i * 53) % 100);
-          const size = 1 + (i % 3);
-          const opacity = 0.15 + (i % 4) * 0.08;
-          const streak = 2 + (i % 4) * 3;
-          return <div key={i} className="absolute rounded-full bg-amber-300" style={{ left: `${x}%`, top: `${y}%`, width: `${streak}px`, height: `${size}px`, opacity, boxShadow: `0 0 ${size * 2}px rgba(251,191,36,${opacity})`, transition: "left 0.06s linear" }} />;
+          const size = 1.5 + (i % 3) * 1;
+          const opacity = 0.3 + (i % 4) * 0.15;
+          const streak = 6 + (i % 5) * 8;
+          return <div key={i} className="absolute rounded-full bg-amber-300" style={{ left: `${x}%`, top: `${y}%`, width: `${streak}px`, height: `${size}px`, opacity, boxShadow: `0 0 ${size * 4}px rgba(251,191,36,${opacity * 0.7})`, transition: "left 0.06s linear" }} />;
         })}
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.03) 0%, transparent 60%)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.08) 0%, transparent 70%)" }} />
       </div>
     );
   }
 
   if (tab === "services") {
-    // Star Wars: Scanning grid with moving contacts
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <svg width="100%" height="100%" className="absolute inset-0 opacity-[0.06]">
+        <svg width="100%" height="100%" className="absolute inset-0 opacity-[0.2]">
           <defs>
             <pattern id="swGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(245,158,11,0.5)" strokeWidth="0.5" />
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(245,158,11,0.8)" strokeWidth="0.7" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#swGrid)" />
         </svg>
-        {Array.from({ length: 12 }).map((_, i) => {
-          const cx = 15 + ((i * 23 + tick * 0.2) % 70);
-          const cy = 10 + ((i * 31 + tick * 0.15) % 80);
-          return <div key={i} className="absolute w-1.5 h-1.5 rounded-full bg-amber-400" style={{ left: `${cx}%`, top: `${cy}%`, opacity: 0.2 + Math.sin((tick + i * 40) * 0.05) * 0.15, boxShadow: "0 0 8px rgba(245,158,11,0.3)", transition: "left 0.06s linear, top 0.06s linear" }} />;
+        {Array.from({ length: 20 }).map((_, i) => {
+          const cx = 8 + ((i * 19 + tick * 0.35) % 84);
+          const cy = 5 + ((i * 27 + tick * 0.25) % 90);
+          const size = 4 + (i % 3) * 2;
+          return <div key={i} className="absolute rounded-full bg-amber-400" style={{ left: `${cx}%`, top: `${cy}%`, width: `${size}px`, height: `${size}px`, opacity: 0.5 + Math.sin((tick + i * 40) * 0.05) * 0.25, boxShadow: `0 0 ${size * 4}px rgba(245,158,11,0.6)`, transition: "left 0.06s linear, top 0.06s linear" }} />;
         })}
-        <div className="absolute w-[600px] h-[600px] rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ border: "1px solid rgba(245,158,11,0.04)", transform: `translate(-50%,-50%) rotate(${tick * 0.3}deg)` }} />
+        <div className="absolute w-[600px] h-[600px] rounded-full left-1/2 top-1/2" style={{ border: "1.5px solid rgba(245,158,11,0.15)", transform: `translate(-50%,-50%) rotate(${tick * 0.5}deg)` }} />
+        <div className="absolute w-[350px] h-[350px] rounded-full left-1/2 top-1/2" style={{ border: "1.5px solid rgba(245,158,11,0.12)", transform: `translate(-50%,-50%) rotate(${-tick * 0.4}deg)` }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.06) 0%, transparent 60%)" }} />
       </div>
     );
   }
 
   if (tab === "agents") {
-    // Circuit board: data flow particles
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => {
-          const isVert = i % 2 === 0;
-          const pos = 5 + (i * 4.7) % 90;
-          const travel = (tick * (0.4 + (i % 3) * 0.2) + i * 30) % 110 - 5;
-          return <div key={i} className="absolute w-1 h-1 rounded-full bg-green-400" style={{ left: isVert ? `${pos}%` : `${travel}%`, top: isVert ? `${travel}%` : `${pos}%`, opacity: 0.12 + Math.sin((tick + i * 20) * 0.04) * 0.08, boxShadow: "0 0 6px rgba(34,197,94,0.3)", transition: "left 0.06s linear, top 0.06s linear" }} />;
-        })}
-        <svg width="100%" height="100%" className="absolute inset-0 opacity-[0.03]">
+        <svg width="100%" height="100%" className="absolute inset-0 opacity-[0.15]">
           <defs>
             <pattern id="circuitGrid" width="80" height="80" patternUnits="userSpaceOnUse">
-              <path d="M 0 40 H 80 M 40 0 V 80" fill="none" stroke="rgba(34,197,94,0.6)" strokeWidth="0.3" />
+              <path d="M 0 40 H 80 M 40 0 V 80" fill="none" stroke="rgba(34,197,94,0.8)" strokeWidth="0.6" />
+              <circle cx="40" cy="40" r="3" fill="rgba(34,197,94,0.5)" />
+              <circle cx="0" cy="0" r="2" fill="rgba(34,197,94,0.3)" />
+              <circle cx="80" cy="80" r="2" fill="rgba(34,197,94,0.3)" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#circuitGrid)" />
         </svg>
+        {Array.from({ length: 40 }).map((_, i) => {
+          const isVert = i % 2 === 0;
+          const pos = 2 + (i * 2.5) % 96;
+          const travel = (tick * (0.6 + (i % 3) * 0.3) + i * 25) % 115 - 5;
+          const size = 3 + (i % 2) * 2;
+          return <div key={i} className="absolute rounded-full bg-green-400" style={{ left: isVert ? `${pos}%` : `${travel}%`, top: isVert ? `${travel}%` : `${pos}%`, width: `${size}px`, height: `${size}px`, opacity: 0.4 + Math.sin((tick + i * 20) * 0.04) * 0.2, boxShadow: `0 0 ${size * 3}px rgba(34,197,94,0.6)`, transition: "left 0.06s linear, top 0.06s linear" }} />;
+        })}
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 30% 70%, rgba(34,197,94,0.05) 0%, transparent 50%)" }} />
       </div>
     );
   }
 
   if (tab === "credits") {
-    // Nebula energy field
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         {[
-          { x: 20, y: 30, r: 300, c: "rgba(236,72,153,0.04)" },
-          { x: 70, y: 60, r: 250, c: "rgba(34,211,238,0.03)" },
-          { x: 50, y: 20, r: 350, c: "rgba(167,139,250,0.03)" },
+          { x: 15, y: 25, r: 500, c1: "rgba(236,72,153,0.15)", c2: "transparent" },
+          { x: 75, y: 50, r: 450, c1: "rgba(34,211,238,0.12)", c2: "transparent" },
+          { x: 40, y: 10, r: 550, c1: "rgba(167,139,250,0.12)", c2: "transparent" },
+          { x: 60, y: 80, r: 400, c1: "rgba(251,191,36,0.08)", c2: "transparent" },
         ].map((n, i) => (
-          <div key={i} className="absolute rounded-full" style={{ left: `${n.x + Math.sin((tick + i * 100) * 0.008) * 5}%`, top: `${n.y + Math.cos((tick + i * 70) * 0.006) * 4}%`, width: `${n.r}px`, height: `${n.r}px`, background: `radial-gradient(circle, ${n.c} 0%, transparent 70%)`, transform: "translate(-50%,-50%)", transition: "left 0.1s, top 0.1s" }} />
+          <div key={i} className="absolute rounded-full" style={{ left: `${n.x + Math.sin((tick + i * 100) * 0.007) * 10}%`, top: `${n.y + Math.cos((tick + i * 70) * 0.005) * 8}%`, width: `${n.r}px`, height: `${n.r}px`, background: `radial-gradient(circle, ${n.c1} 0%, ${n.c2} 70%)`, transform: "translate(-50%,-50%)", transition: "left 0.15s ease, top 0.15s ease" }} />
         ))}
-        {Array.from({ length: 40 }).map((_, i) => {
-          const x = (i * 41 + tick * 0.1) % 100;
-          const y = (i * 67) % 100;
-          const s = 0.5 + (i % 3) * 0.5;
-          return <div key={i} className="absolute rounded-full bg-white" style={{ left: `${x}%`, top: `${y}%`, width: `${s}px`, height: `${s}px`, opacity: 0.08 + Math.sin((tick + i * 25) * 0.03) * 0.06 }} />;
+        {Array.from({ length: 80 }).map((_, i) => {
+          const x = (i * 37 + tick * 0.12) % 100;
+          const y = (i * 59) % 100;
+          const s = 1.5 + (i % 3) * 1;
+          return <div key={i} className="absolute rounded-full bg-white" style={{ left: `${x}%`, top: `${y}%`, width: `${s}px`, height: `${s}px`, opacity: 0.25 + Math.sin((tick + i * 25) * 0.03) * 0.15, boxShadow: `0 0 ${s * 4}px rgba(255,255,255,0.4)` }} />;
         })}
       </div>
     );
   }
 
   if (tab === "dashboards") {
-    // TRON: Light cycle trails on grid
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <svg width="100%" height="100%" className="absolute inset-0 opacity-[0.04]">
+        <svg width="100%" height="100%" className="absolute inset-0 opacity-[0.1]">
           <defs>
             <pattern id="tronBg" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(34,211,238,0.6)" strokeWidth="0.4" />
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(34,211,238,0.7)" strokeWidth="0.5" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#tronBg)" />
         </svg>
-        {Array.from({ length: 6 }).map((_, i) => {
-          const y = 15 + i * 14;
-          const headX = (tick * (0.5 + i * 0.1) + i * 50) % 110 - 5;
+        {Array.from({ length: 8 }).map((_, i) => {
+          const y = 10 + i * 11;
+          const headX = (tick * (0.6 + i * 0.12) + i * 50) % 115 - 5;
           return (
-            <div key={i} className="absolute h-px" style={{ top: `${y}%`, left: `${Math.max(0, headX - 15)}%`, width: "15%", background: `linear-gradient(90deg, transparent, rgba(34,211,238,${0.1 + (i % 3) * 0.05}))`, transition: "left 0.06s linear" }}>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-cyan-400" style={{ opacity: 0.3, boxShadow: "0 0 8px rgba(34,211,238,0.4)" }} />
+            <div key={i} className="absolute" style={{ top: `${y}%`, left: `${Math.max(0, headX - 20)}%`, width: "20%", height: "2px", background: `linear-gradient(90deg, transparent, rgba(34,211,238,${0.25 + (i % 3) * 0.1}))`, transition: "left 0.06s linear" }}>
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-cyan-400" style={{ opacity: 0.6, boxShadow: "0 0 16px rgba(34,211,238,0.6)" }} />
+            </div>
+          );
+        })}
+        {Array.from({ length: 4 }).map((_, i) => {
+          const x = 15 + i * 22;
+          const headY = (tick * (0.4 + i * 0.1) + i * 70) % 115 - 5;
+          return (
+            <div key={`v${i}`} className="absolute" style={{ left: `${x}%`, top: `${Math.max(0, headY - 15)}%`, width: "2px", height: "15%", background: `linear-gradient(180deg, transparent, rgba(34,211,238,${0.2 + (i % 2) * 0.1}))`, transition: "top 0.06s linear" }}>
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-cyan-400" style={{ opacity: 0.5, boxShadow: "0 0 12px rgba(34,211,238,0.5)" }} />
             </div>
           );
         })}
@@ -2957,53 +2970,53 @@ function TabBackground({ tab }: { tab: string }) {
   }
 
   if (tab === "security") {
-    // HAL 9000: Pulsing red scan waves
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-          {Array.from({ length: 5 }).map((_, i) => {
-            const r = 100 + i * 80;
-            const phase = (tick * 0.8 + i * 30) % 360;
-            return <div key={i} className="absolute rounded-full" style={{ width: `${r}px`, height: `${r}px`, left: `${-r / 2}px`, top: `${-r / 2}px`, border: "1px solid rgba(220,38,38,0.06)", opacity: 0.3 + Math.sin(phase * 0.017) * 0.2, transform: `scale(${1 + Math.sin(phase * 0.017) * 0.05})` }} />;
+        <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2">
+          {Array.from({ length: 8 }).map((_, i) => {
+            const r = 60 + i * 90;
+            const phase = (tick * 1.2 + i * 25) % 360;
+            const op = 0.15 + Math.sin(phase * 0.017) * 0.1;
+            return <div key={i} className="absolute rounded-full" style={{ width: `${r}px`, height: `${r}px`, left: `${-r / 2}px`, top: `${-r / 2}px`, border: `2px solid rgba(220,38,38,${op})`, opacity: 0.7 + Math.sin(phase * 0.017) * 0.3, transform: `scale(${1 + Math.sin(phase * 0.017) * 0.1})` }} />;
           })}
-          <div className="absolute w-4 h-4 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2" style={{ opacity: 0.15 + Math.sin(tick * 0.05) * 0.1, boxShadow: `0 0 ${30 + Math.sin(tick * 0.05) * 15}px rgba(220,38,38,0.2)` }} />
+          <div className="absolute w-8 h-8 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2" style={{ opacity: 0.5 + Math.sin(tick * 0.06) * 0.3, boxShadow: `0 0 ${50 + Math.sin(tick * 0.06) * 30}px rgba(220,38,38,0.5)` }} />
         </div>
+        <div className="absolute inset-0" style={{ background: `conic-gradient(from ${tick * 0.6}deg at 50% 40%, transparent 0deg, rgba(220,38,38,0.1) 20deg, transparent 40deg)` }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 40%, rgba(220,38,38,0.06) 0%, transparent 50%)" }} />
       </div>
     );
   }
 
   if (tab === "logs") {
-    // Matrix: Falling code columns
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {Array.from({ length: 35 }).map((_, i) => {
-          const x = 2 + (i * 2.8);
-          const speed = 0.4 + (i % 4) * 0.15;
+        {Array.from({ length: 45 }).map((_, i) => {
+          const x = 1 + (i * 2.2);
+          const speed = 0.5 + (i % 4) * 0.2;
           const y = ((tick * speed + i * 37) % 130) - 15;
-          const chars = "01";
-          const ch = chars[(tick + i) % 2];
-          return <div key={i} className="absolute text-green-500 font-mono" style={{ left: `${x}%`, top: `${y}%`, fontSize: "10px", opacity: 0.06 + (i % 3) * 0.02, textShadow: "0 0 4px rgba(34,197,94,0.3)", transition: "top 0.06s linear" }}>{ch}</div>;
+          const chars = "01アイウエオカキクケコ";
+          const ch = chars[(tick + i) % chars.length];
+          const isHead = y < 10;
+          return <div key={i} className="absolute font-mono" style={{ left: `${x}%`, top: `${y}%`, fontSize: "13px", color: isHead ? "rgba(34,197,94,0.9)" : "rgba(34,197,94,0.5)", opacity: isHead ? 0.7 : (0.15 + (i % 3) * 0.08), textShadow: `0 0 ${isHead ? 10 : 5}px rgba(34,197,94,${isHead ? 0.6 : 0.3})`, transition: "top 0.06s linear" }}>{ch}</div>;
         })}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(34,197,94,0.03) 50%, transparent 100%)" }} />
       </div>
     );
   }
 
   if (tab === "failures") {
-    // Red Alert: Warning pulses radiating outward
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {Array.from({ length: 4 }).map((_, i) => {
-          const phase = (tick * 1.2 + i * 90) % 360;
-          const scale = 0.3 + (phase / 360) * 1.5;
-          const opacity = Math.max(0, 0.08 - (phase / 360) * 0.08);
-          return <div key={i} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-red-500" style={{ width: `${scale * 400}px`, height: `${scale * 400}px`, opacity, transition: "all 0.06s linear" }} />;
+        {Array.from({ length: 6 }).map((_, i) => {
+          const phase = (tick * 1.8 + i * 60) % 360;
+          const scale = 0.15 + (phase / 360) * 2.2;
+          const opacity = Math.max(0, 0.4 - (phase / 360) * 0.4);
+          return <div key={i} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-red-500" style={{ width: `${scale * 600}px`, height: `${scale * 600}px`, opacity, boxShadow: `inset 0 0 40px rgba(220,38,38,${opacity * 0.4}), 0 0 20px rgba(220,38,38,${opacity * 0.3})`, transition: "all 0.06s linear" }} />;
         })}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-red-600" style={{ opacity: 0.1 + Math.sin(tick * 0.08) * 0.08, boxShadow: "0 0 40px rgba(220,38,38,0.15)" }} />
-        {Array.from({ length: 20 }).map((_, i) => {
-          const x = (i * 47 + tick * 0.05) % 100;
-          const y = (i * 71) % 100;
-          return <div key={`d${i}`} className="absolute w-0.5 h-0.5 rounded-full bg-red-400" style={{ left: `${x}%`, top: `${y}%`, opacity: 0.05 + Math.sin((tick + i * 15) * 0.04) * 0.04 }} />;
-        })}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-red-600" style={{ opacity: 0.4 + Math.sin(tick * 0.1) * 0.3, boxShadow: "0 0 80px rgba(220,38,38,0.5)" }} />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 50%, rgba(220,38,38,${0.06 + Math.sin(tick * 0.05) * 0.04}) 0%, transparent 55%)` }} />
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(90deg, transparent, rgba(220,38,38,${0.3 + Math.sin(tick * 0.08) * 0.2}), transparent)`, boxShadow: `0 0 20px rgba(220,38,38,${0.2 + Math.sin(tick * 0.08) * 0.15})` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: `linear-gradient(90deg, transparent, rgba(220,38,38,${0.3 + Math.sin(tick * 0.08) * 0.2}), transparent)`, boxShadow: `0 0 20px rgba(220,38,38,${0.2 + Math.sin(tick * 0.08) * 0.15})` }} />
       </div>
     );
   }
