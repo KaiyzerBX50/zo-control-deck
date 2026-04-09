@@ -1,27 +1,13 @@
 import type { Context } from "hono";
-
+import { readFileSync, statSync } from "node:fs";
+const AGENTS_FILE = "/home/workspace/.zo-agents.json";
 export default async (c: Context) => {
-  const agents = [
-    {
-      id: "d35c6bd8-d712-412f-a4a0-6ba212e9808f",
-      name: "Generate DLP and DSPM Report",
-      active: false,
-      status: "inactive",
-      schedule: "Daily at 11:00 AM",
-      last_run: null,
-      delivery_method: "sms",
-    },
-  ];
-
-  return c.json({
-    agents,
-    stats: {
-      total: agents.length,
-      active: agents.filter((a) => a.active).length,
-      inactive: agents.filter((a) => !a.active).length,
-    },
-    data_source: "STATIC",
-    note: "Agent data is cached. For live updates, use the Zo app's Agents page.",
-    last_updated: new Date().toISOString(),
-  });
+  try {
+    const raw = readFileSync(AGENTS_FILE, "utf-8");
+    const agents = JSON.parse(raw);
+    const stat = statSync(AGENTS_FILE);
+    return c.json({ agents, stats: { total: agents.length, active: agents.filter((a: any) => a.active).length, inactive: agents.filter((a: any) => !a.active).length }, data_source: "SYNC_FILE", last_synced: stat.mtime.toISOString(), last_updated: new Date().toISOString() });
+  } catch (e: any) {
+    return c.json({ agents: [], stats: { total: 0, active: 0, inactive: 0 }, data_source: "ERROR", error: e.message, last_updated: new Date().toISOString() });
+  }
 };
